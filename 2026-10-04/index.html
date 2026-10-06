@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>스레드 위클리</title>
+  <style>
+    :root {
+      --red: #e30613;
+      --ink: #111;
+      --paper: #fff;
+      --soft: #f2f2f2;
+      --muted: #686868;
+      --line: #c8c8c8;
+      --font: "Helvetica Neue", "Akzidenz-Grotesk", Inter, Arial, "Apple SD Gothic Neo", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    }
+    :root[data-theme="light"] { --ink:#111; --paper:#fff; --soft:#f2f2f2; --muted:#686868; --line:#c8c8c8; }
+    :root[data-theme="dark"] { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; }
+    button { font:inherit; }
+    h1,h2,h3,p,figure,blockquote,ol,ul { margin:0; }
+    ol,ul { padding:0; }
+    .page { width:min(100% - 40px, 1280px); margin:0 auto; padding:28px 0 64px; }
+    .grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; }
+    .kicker { color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .rule { border-top:1px solid var(--ink); }
+
+    .mast { border-top:8px solid var(--red); padding-top:18px; }
+    .brand { grid-column:1 / span 5; font-size:clamp(1.1rem,2vw,1.65rem); font-weight:900; letter-spacing:-.04em; line-height:1; }
+    .issue { grid-column:9 / -1; text-align:right; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .hero { margin-top:72px; align-items:end; }
+    .hero-date { grid-column:1 / span 8; font-size:clamp(2.4rem,7vw,6.4rem); font-weight:900; letter-spacing:-.06em; line-height:.9; word-break:keep-all; }
+    .hero-note { grid-column:10 / -1; padding-top:12px; border-top:1px solid var(--ink); font-size:.82rem; font-weight:700; }
+    .hero-note span { display:block; margin-top:8px; color:var(--muted); font-weight:500; }
+
+    .metrics { margin-top:64px; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+    .metric { grid-column:span 3; min-height:145px; padding:16px 12px 18px 0; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; }
+    .metric:last-child { border-right:0; }
+    .metric strong { font-size:clamp(2.2rem,4.6vw,4.6rem); font-weight:900; letter-spacing:-.06em; line-height:.9; font-variant-numeric:tabular-nums; }
+    .metric span { max-width:10rem; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .metric em { color:var(--red); font-style:normal; }
+
+    .jump { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 20px; }
+    .jump a { text-decoration:none; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .jump a::before { content:"↘ "; color:var(--red); }
+
+    .theme-switch { margin-top:16px; display:flex; gap:6px; }
+    .theme-switch button { border:1px solid var(--line); background:transparent; color:var(--muted); padding:5px 11px; font-size:.68rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; }
+    .theme-switch button.on { border-color:var(--red); color:var(--red); }
+
+    .section { margin-top:120px; }
+    .section-head { align-items:end; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+    .section-index { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; }
+    .section-title { grid-column:2 / span 7; font-size:clamp(1.6rem,3vw,3.1rem); font-weight:900; letter-spacing:-.05em; line-height:1.05; }
+    .section-meta { grid-column:10 / -1; text-align:right; color:var(--muted); font-size:.76rem; font-weight:700; line-height:1.4; }
+
+    /* v2: 멤버 기사는 짧은 레퍼런스 줄(후크 한 줄 + 링크)로만 표시 — 본문 덤프 없음 */
+    .refs { margin-top:10px; }
+    .refs-head { font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .ref-row { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:baseline; padding:10px 0; border-bottom:1px solid var(--line); font-size:.85rem; }
+    .ref-row:last-child { border-bottom:0; }
+    .ref-row .no { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ref-row .ref-body { grid-column:2 / span 9; min-width:0; }
+    .ref-row .ref-title { font-weight:700; letter-spacing:-.01em; }
+    .ref-row .ref-hook { color:var(--muted); margin-top:2px; }
+    .ref-row .ref-links { margin-top:4px; font-size:.76rem; font-weight:700; }
+    .ref-row .ref-links a { color:var(--red); text-decoration:none; border-bottom:1px solid var(--red); margin-right:14px; }
+
+    .research { margin-top:26px; padding:24px 0 10px; background:var(--soft); }
+    .research-inner { padding:24px 28px; }
+    .research-head { font-size:.82rem; font-weight:900; letter-spacing:.04em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .research-head .dot { color:var(--red); }
+    .research-narrative { font-size:1.02rem; line-height:1.85; color:var(--ink); max-width:72ch; margin-bottom:22px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+    .links { list-style:none; }
+    .links li { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:start; padding:13px 0; border-bottom:1px solid var(--line); }
+    .links li:last-child { border-bottom: 0; }
+    .links li > .t { grid-column:1 / span 2; color:var(--red); font-size:.68rem; font-weight:900; letter-spacing:.04em; }
+    .links a.rlink { grid-column:3 / span 7; min-width:0; display:flex; flex-direction:column; text-decoration:none; }
+    .links a.rlink b { font-size:.92rem; line-height:1.35; }
+    .links a.rlink span { margin-top:3px; color:var(--muted); font-size:.78rem; line-height:1.5; }
+    .links li > small.rdate { grid-column:11 / -1; color:var(--muted); font-size:.72rem; text-align:right; }
+    .research-empty { padding:16px 0; color:var(--muted); font-size:.85rem; }
+    .research-note { margin-top:16px; padding:12px 14px; background:#fff; border-left:3px solid var(--red); color:var(--muted); font-size:.78rem; line-height:1.6; }
+    .links a.rlink .src-tag { order:-1; align-self:flex-start; margin-bottom:5px; display:inline-block; font-size:.62rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; }
+    .links a.rlink .src-tag-web { color:var(--muted); }
+    .links a.rlink .src-tag-newshada { color:var(--red); border-color:var(--red); }
+    .links a.rlink .src-tag-hackernews { color:#ff6600; border-color:#ff6600; }
+    .links a.rlink .src-tag-korean_economic_news { color:#0a5c36; border-color:#0a5c36; }
+
+    .foot { margin-top:70px; padding-top:12px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+
+    @media (max-width: 760px) {
+      .page { width:min(100% - 28px, 680px); padding-top:18px; }
+      .grid { column-gap:10px; }
+      .brand { grid-column:1 / span 7; }
+      .issue { grid-column:9 / -1; }
+      .hero { margin-top:50px; }
+      .hero-date { grid-column:1 / -1; font-size:clamp(2.6rem,13vw,4.4rem); line-height:.95; }
+      .hero-note { grid-column:7 / -1; margin-top:34px; }
+      .metrics { margin-top:42px; }
+      .metric { grid-column:span 6; min-height:112px; padding:13px 8px 13px 0; border-bottom:1px solid var(--line); }
+      .metric:nth-child(even) { border-right:0; padding-left:10px; }
+      .metric strong { font-size:2.3rem; }
+      .jump { gap:8px 14px; }
+      .section { margin-top:78px; }
+      .section-index { grid-column:1 / span 2; }
+      .section-title { grid-column:3 / -1; font-size:1.9rem; }
+      .section-meta { grid-column:3 / -1; margin-top:14px; justify-self:start; text-align:left; }
+      .ref-row { grid-template-columns:28px 1fr; gap:4px 12px; }
+      .ref-row .no,.ref-row .ref-body { grid-column:auto; }
+      .links li { grid-template-columns:72px 1fr; gap:8px 12px; }
+      .links li > .t,.links a.rlink,.links li > small.rdate { grid-column:auto; }
+      .links a.rlink { grid-column:2; }
+      .links li > small.rdate { grid-column:2; text-align:left; }
+      .research-narrative { max-width:none; }
+      .research-inner { padding:18px 14px; }
+      .foot { flex-direction:column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html{scroll-behavior:auto} }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <div class="grid"><div class="brand">스레드<br>위클리</div><div class="issue">Scrap &amp; Research Digest<br>Threads Weekly</div></div>
+    <div class="grid hero"><h1 class="hero-date">2026.10.04</h1><p class="hero-note">Sample Issue v2<span>큐레이션·에디토리얼 리서치</span></p></div>
+  </header>
+
+  <section class="grid metrics" aria-label="이번 호 통계">
+    <div class="metric"><strong>3</strong><span>다룬 토픽 수</span></div>
+    <div class="metric"><strong>28</strong><span>리서치 소스 수</span></div>
+    <div class="metric"><strong>55</strong><span>기간<em>(일)</em></span></div>
+    <div class="metric"><strong>12</strong><span>참고 원문<em>(각주)</em></span></div>
+  </section>
+  <nav class="jump" aria-label="바로가기"><a href="#topic-open-source-tts-voice-cloning">오픈소스 TTS 춘추전국:</a><a href="#topic-decision-models-arrive">&#x27;결정 모델&#x27;이라는 새 장</a><a href="#topic-parenting-self-directed-kids">잔소리 없이 키우는 법: </a></nav>
+  <div class="theme-switch" role="group" aria-label="테마 선택">
+    <button type="button" data-theme-choice="system">시스템</button>
+    <button type="button" data-theme-choice="light">라이트</button>
+    <button type="button" data-theme-choice="dark">다크</button>
+  </div>
+
+  <section id="topic-open-source-tts-voice-cloning" class="section">
+    <div class="grid section-head"><span class="section-index">01</span><h2 class="section-title">오픈소스 TTS 춘추전국: 몇 초면 내 목소리가 복제된다</h2><p class="section-meta">0.1B 초소형부터 150배속 실시간까지, 무료로 풀린 음성 합성·복제 모델들이 한 달 새 쏟아졌다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">3초짜리 목소리 샘플 하나로 누구든 복제할 수 있는 세상이, 이제는 유료 구독이 아니라 무료 오픈소스로 와 있다. Resemble AI의 Chatterbox Turbo는 350M 파라미터로 블라인드 평가에서 ElevenLabs를 63.75%의 선호도로 이겼고, Kyutai의 Pocket TTS는 단 1억 파라미터로 CPU에서도 실시간 복제가 돌아간다 — &quot;좋은 음성 AI는 이제 GPU 서버가 아니라 노트북에서 돈다&quot;는 말이 그냥 마케팅 문구가 아니게 됐다. Hacker News에서도 최근 &quot;Gemini vs ElevenLabs&quot; 비교 글이 361점을 넘기며 화제가 됐을 정도로, 이 경쟁은 빅테크 대 오픈소스의 대리전이 되어가고 있다. 그런데 이 기술이 퍼지는 속도만큼 빠르게 퍼지는 게 또 있다: 보이스피싱이다. 맥아피 조사에 따르면 설문 대상 4명 중 1명이 AI 음성 복제 스캠을 직접 겪거나 주변에서 겪었고, 한국경제 보도에 따르면 국내 보이스피싱 피해금액은 평균 4,100만원, 신고 건수는 1년 만에 4.4배나 늘었다. UN은 동남아 스캠 센터들이 딥페이크 음성을 &#x27;무기화&#x27;하고 있다고 경고했다. 공짜로 풀린 혁신의 양면 — 누구나 내 목소리로 노래를 만들 수도 있지만, 누군가는 내 목소리로 가족에게 전화를 걸 수도 있다는 이야기다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://www.resemble.ai/learn/models/chatterbox" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Chatterbox: Open Source Text-to-Speech | Resemble AI</b><span>350M 파라미터 Chatterbox Turbo가 블라인드 평가에서 63.75% 선호도로 ElevenLabs를 이겼다고 주장, MIT 라이선스로 완전 공개.</span></a><small class="rdate">2026</small></li><li><span class="t">R02</span><a class="rlink" href="https://kyutai.org/tts/" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Kyutai TTS — Pocket TTS</b><span>2026년 1월 공개된 Kyutai Pocket TTS는 1억(0.1B) 파라미터로 CPU 실시간 음성 복제가 가능한 초경량 오픈소스 모델.</span></a><small class="rdate">2026-01</small></li><li><span class="t">R03</span><a class="rlink" href="https://pinggy.io/blog/best_open_source_self_hosted_text_to_speech_models" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Best Open Source Self-Hosted Text-to-Speech Models in 2026</b><span>Mistral Voxtral TTS는 3초 음성만으로 오픈웨이트 중 최고 Elo(1,010)를 기록, 16GB VRAM 한 대로 서빙 가능.</span></a><small class="rdate">2026-08-26</small></li><li><span class="t">R04</span><a class="rlink" href="https://arxiv.org/abs/2605.05611" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>X-Voice: Zero-Shot Cross-Lingual Voice Cloning (arXiv)</b><span>0.4B 파라미터로 30개 언어 제로샷 음성 복제를 구현한 연구 모델, Qwen3-TTS급 성능을 더 작은 모델로 달성했다고 주장.</span></a><small class="rdate">2026-05</small></li><li><span class="t">R05</span><a class="rlink" href="https://www.mcafee.com/ai/news/ai-voice-scam/" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Scammers use AI voice cloning tools to fuel new scams | McAfee AI Hub</b><span>전세계 설문 7,000명 중 25%가 AI 음성 복제 스캠을 경험했거나 주변인이 겪었다고 답했고, 3초 샘플로 85% 일치 복제가 가능했다는 실험 결과.</span></a><small class="rdate">2026</small></li><li><span class="t">R06</span><a class="rlink" href="https://news.un.org/en/story/2026/03/1167144" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Deepfakes, voice cloning and weaponised AI: Global wake-up call to organised fraud — UN News</b><span>UNODC 보고서, 동남아 스캠 센터들이 딥페이크 음성·영상을 조직적으로 &#x27;무기화&#x27;해 전세계 피해자에게서 수십억 달러를 가로챘다고 경고.</span></a><small class="rdate">2026-03-16</small></li><li><span class="t">R07</span><a class="rlink" href="https://news.hada.io/topic?id=27628" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>MimikaStudio - 맥용 음성 복제 및 TTS 오픈소스 | GeekNews</b><span>Qwen3-TTS·Chatterbox 엔진을 통합한 맥용 음성 복제 스튜디오. 3초 샘플로 23개 언어 음성 복제, MLX 기반 Metal 가속, GeekNews Weekly에도 선정됐다.</span></a><small class="rdate">2026-03-19</small></li><li><span class="t">R08</span><a class="rlink" href="https://news.hada.io/topic?id=28527" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>VoxCPM2 - 실제 음성과 비슷한 음성 복제 가능한 다국어 음성 합성 오픈소스 | GeekNews</b><span>RTX 4090 기준 RTF 0.13의 실시간 스트리밍급 음성 복제, 화자 유사도(SIM) 오픈소스 최상위권을 기록한 다국어 TTS 모델 소개.</span></a><small class="rdate">2026</small></li><li><span class="t">R09</span><a class="rlink" href="https://news.ycombinator.com/item?id=47530929" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Mistral AI releases an open source TTS model it says beats ElevenLabs — Hacker News</b><span>Mistral Voxtral TTS 공개 당시 HN 토론. 벤치마크에서 ElevenLabs를 이겼다는 주장과 오픈웨이트 공개를 둘러싼 커뮤니티 반응.</span></a><small class="rdate">2026-03-26</small></li><li><span class="t">R10</span><a class="rlink" href="https://news.ycombinator.com/item?id=49470574" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Sopro V2: SOTA voice cloning TTS model that runs on your CPU — Hacker News</b><span>CPU에서 돌아가는 SOTA급 음성 복제 TTS 모델 Sopro V2 소개 스레드.</span></a><small class="rdate">2026-08-27</small></li><li><span class="t">R11</span><a class="rlink" href="https://news.ycombinator.com/item?id=49933563" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Gemini vs. Elevenlabs: TTS and Voice Cloning — Hacker News</b><span>빅테크(Gemini)와 상업 서비스(ElevenLabs)의 TTS·음성복제 품질을 비교한 최신 글, 361점·82댓글로 화제.</span></a><small class="rdate">2026-10-02</small></li><li><span class="t">R12</span><a class="rlink" href="https://www.hankyung.com/article/202504086565g" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>영락없는 자녀 목소린데…AI 보이스피싱, AI로 방지 — 한국경제</b><span>AI 보이스피싱 평균 피해금액 4,100만원, 신고 건수 1년 만에 50만→219만건(4.4배) 증가. SK텔레콤·KT·LG유플러스의 AI 기반 방지 기술 대응 현황.</span></a><small class="rdate">2025-04-08</small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (6)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">dots.tts — 2B 크기 오픈소스 TTS 모델</div><div class="ref-hook">2B 모델 하나가 54ms 안에 목소리를 복제하는 시대, Apache 2.0으로 전부 공개됐다.</div><div class="ref-links"><a href="https://studio-dots-ai.github.io/dots.tts-demo/" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-08-21%20dots.tts%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%20TTS%20%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">몇 초 음성만 있으면 그 목소리로 읽어주는 무료 TTS - Audio8 TTS 0.1B</div><div class="ref-hook">경량화의 끝판왕: 0.1B짜리 모델이 한 달 만에 3,640회 다운로드를 찍었다.</div><div class="ref-links"><a href="https://github.com/Audio8-AI/Audio8_TTS" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-08-26%20Audio8%20TTS%200.1B%20%EC%86%8C%ED%98%95%20%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">03</span><div class="ref-body"><div class="ref-title">LuxTTS는 150배 실시간 속도의 초경량 음성 복제 모델입니다</div><div class="ref-hook">1GB VRAM, CPU에서도 실시간보다 빠른 150배속 음성 복제기.</div><div class="ref-links"><a href="https://github.com/ysharma3501/LuxTTS" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-08-28%20LuxTTS%20%EC%B4%88%EA%B2%BD%EB%9F%89%20%EC%9D%8C%EC%84%B1%20%EB%B3%B5%EC%A0%9C%20%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">04</span><div class="ref-body"><div class="ref-title">GLM-TTS — 중국 Zhipu AI(Z.ai) 오픈소스 텍스트 음성 변환(TTS) 모델</div><div class="ref-hook">중국 Zhipu AI가 음성 합성 경쟁에 뛰어들며 또 하나의 무료 TTS를 던졌다.</div><div class="ref-links"><a href="https://github.com/zai-org/GLM-TTS" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-02%20GLM-TTS%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%20TTS%20%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">05</span><div class="ref-body"><div class="ref-title">무료로 내 목소리 복제하고 TTS로 콘텐츠 만들기 (Qwen3-TTS)</div><div class="ref-hook">ElevenLabs 구독을 끊게 만든 30초 녹음 하나의 힘.</div><div class="ref-links"><a href="https://www.threads.com/@simon.dsgn/post/DcyUM9VDlDd" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-03%20Qwen3-TTS%20%EB%AA%A9%EC%86%8C%EB%A6%AC%20%EB%B3%B5%EC%A0%9C%20%EB%82%98%EB%9E%98%EC%9D%B4%EC%85%98%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">06</span><div class="ref-body"><div class="ref-title">오픈소스 음성 AI, 기준이 달라졌습니다 — OmniVoice (k2-fsa)</div><div class="ref-hook">600개 언어를 복제하는 TTS, 공개 5개월 만에 깃허브 스타 1만 돌파.</div><div class="ref-links"><a href="https://github.com/k2-fsa/OmniVoice" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-08%20OmniVoice%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%20%EC%9D%8C%EC%84%B1AI%20TTS%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-decision-models-arrive" class="section">
+    <div class="grid section-head"><span class="section-index">02</span><h2 class="section-title">&#x27;결정 모델&#x27;이라는 새 장르: Cloudflare Clef와 llama.cpp의 화답</h2><p class="section-meta">Cloudflare가 의사결정 전용 모델을 공개하자마자 llama.cpp가 공식 지원을 붙이며 에이전트용 초경량 판단 모델이 로컬로 내려왔다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">&quot;젠장 또 Jev야..&quot; — 스레드 원문의 이 짧은 탄식이 지금 이 바닥 분위기를 가장 잘 설명한다. 두 주 전 TypeSafe의 Jev가 &quot;결정 모델&quot;이라는 개념 자체를 만들어 돌풍을 일으키자, 클라우드플레어가 곧바로 Clef와 Clef-flash를 오픈웨이트로 공개하며 맞불을 놨다. The Register와 Hacker News에서는 벤치마크 싸움이 아주 노골적으로 벌어졌는데, 클라우드플레어가 자체 평가에서 Jev를 4개 영역 중 3개에서 이겼다고 발표했지만 가격은 토큰당 6배(0.24달러 대 0.042달러)나 비쌌다는 점이 지적됐고, 레딧에서는 &quot;더 약한 버전의 Jev와 비교한 게 아니냐&quot;는 반박까지 나왔다. 클라우드플레어는 한 술 더 떠 &quot;이제 에이전트 의사결정에 인간이 꼭 개입할 필요는 없다&quot;고 선언했는데, 이 말 한마디가 HN 614포인트·214개 댓글을 끌어낸 진짜 이유였다. 흥미롭게도 바로 다음 날 llama.cpp가 &quot;결정 모델&quot; 공식 지원을 발표하며 이 장르를 로컬 추론 세계로 끌어왔고, GeekNews 역시 이를 그날 가장 중요한 토픽으로 다뤘다. 서울경제는 이 경쟁의 배경을 숫자로 짚었는데, 클라우드플레어의 AI 에이전트 과금 매출이 2025년 이후 30%대 성장세를 이어가고 있으며 Workers 활성 개발자가 1년도 안 돼 450만→550만 명으로 늘었다는 것이다 — 결정 모델 전쟁은 결국 에이전트 시대의 과금 주도권 싸움이라는 얘기다. 작은 모델 하나가 촉발한 가격·성능·윤리·사업 삼각 논쟁 — 결정 모델이라는 장르는 이제 막 두 번째 라운드에 들어섰다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://blog.cloudflare.com/clef-decision-models/" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Introducing Clef: our open-source decision models, and new RL fine-tuning platform | Cloudflare Blog</b><span>클라우드플레어가 Clef·Clef-flash 두 결정 모델을 Workers AI에 공개, Jev API와 완전 호환되며 Apache 2.0으로 가중치도 오픈.</span></a><small class="rdate">2026-10-01</small></li><li><span class="t">R02</span><a class="rlink" href="https://www.theregister.com/ai-and-ml/2026/10/01/cloudflare-tries-to-outplay-jev-with-open-weight-clef-models/5300649" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Cloudflare tries to outplay Jev with open-weight Clef models — The Register</b><span>Clef는 85GB VRAM, Clef-flash는 41GB VRAM이 필요하며 가격은 Jev보다 약 6배 비싸다는 분석. 이미지·영상 입력 지원이 차별점.</span></a><small class="rdate">2026-10-01</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.ycombinator.com/item?id=49923692" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Clef: Open-weight decision models — Hacker News 토론</b><span>614포인트 217댓글. &quot;공개 벤치마크는 조작하기 쉽다&quot;, &quot;더 약한 Jev 버전과 비교한 것 아니냐&quot;는 반박이 베스트 댓글로 올라옴.</span></a><small class="rdate">2026-10-01</small></li><li><span class="t">R04</span><a class="rlink" href="https://the-decoder.com/cloudflare-says-its-new-clef-model-means-humans-no-longer-need-to-be-in-the-loop-for-ai-agents/" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Cloudflare says its new Clef model means humans no longer need to be in the loop for AI agents — The Decoder</b><span>클라우드플레어가 &quot;에이전트 의사결정에 인간이 꼭 필요하지 않다&quot;고 선언, Clef-flash는 39ms, Clef는 209ms 응답속도로 Jev(524ms)보다 빠르다고 주장.</span></a><small class="rdate">2026-10-02</small></li><li><span class="t">R05</span><a class="rlink" href="https://traictory.com/news/2026-10-03-cloudflare-clef-decision-models" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Cloudflare ships Clef, an open-weight answer to Jev, with a price critics noticed — Traictory</b><span>벤치마크 양쪽 방향을 다 보면 When2Call에서는 오히려 Jev(80.97)가 Clef-flash(65.58)를 크게 앞서는 등, 벤더 발표를 곧이곧대로 믿기 어렵다는 비판적 분석.</span></a><small class="rdate">2026-10-03</small></li><li><span class="t">R06</span><a class="rlink" href="https://news.hada.io/topic?id=34621" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Cloudflare, 의사결정 모델 Clef와 RL 미세조정 서비스 공개 | GeekNews</b><span>GeekNews의 Clef 발표 정리. 43개 평가 지연시간 비교(Clef 209ms·Clef-flash 39ms·Jev 524ms)와 가격 논란을 담은 HN 댓글 다이제스트까지 함께 소개.</span></a><small class="rdate">2026-10-02</small></li><li><span class="t">R07</span><a class="rlink" href="https://news.ycombinator.com/item?id=49934323" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>New in Llama.cpp: Decision Models — Hacker News</b><span>llama.cpp가 결정 모델(Jev/Clef 호환) 공식 지원을 발표한 글의 HN 스레드 — 144M~27B 모델을 로컬에서 바로 돌릴 수 있게 된 소식.</span></a><small class="rdate">2026-10-02</small></li><li><span class="t">R08</span><a class="rlink" href="https://www.sedaily.com/subscription/series/S010100102" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>[글로벌 핫스톡] AI에이전트 과금 앞세워…클라우드플레어, 30%대 성장 — 서울경제</b><span>클라우드플레어가 Workers AI와 에이전트 과금 체계로 2025년 이후 30%대 성장을 이어가고 있으며, Workers 활성 개발자가 450만→550만 명으로 늘었다는 실적 분석.</span></a><small class="rdate">2026</small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">젠장 또 Jev야.. — Cloudflare, 결정 모델 Clef / Clef-flash 공개</div><div class="ref-hook">&quot;젠장 또 Jev야&quot; — 클라우드플레어가 2주 만에 경쟁 모델로 맞받아쳤다.</div><div class="ref-links"><a href="https://blog.cloudflare.com/clef-decision-models/" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-03%20Cloudflare%20Clef%20%EA%B2%B0%EC%A0%95%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">llama.cpp, 144M~27B &#x27;의사결정(Decision) 모델&#x27; 공식 지원 추가</div><div class="ref-hook">144M부터 27B까지, 로컬에서 바로 돌리는 의사결정 모델이 공식 지원에 들어갔다.</div><div class="ref-links"><a href="https://huggingface.co/blog/ggml-org/decision-models-in-llamacpp" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-03%20llama.cpp%20Decision%20Models%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-parenting-self-directed-kids" class="section">
+    <div class="grid section-head"><span class="section-index">03</span><h2 class="section-title">잔소리 없이 키우는 법: 자기주도 아이를 만드는 부모의 말</h2><p class="section-meta">&quot;숙제 다 했어?&quot;를 대신할 질문법부터 챗GPT 프롬프트, 아들과 평생 가까이 지내는 습관까지 스레드에서 건진 육아 기준들.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">2026년 육아 담론의 가장 뜨거운 논쟁은 &quot;더 다정하게&quot;가 아니라 &quot;다정함 다음엔 뭐가 오나&quot;다. 가디언은 지난 10년을 지배한 &#x27;젠틀 페어런팅&#x27;에 대한 역풍, 일명 &#x27;FAFO(Fuck Around, Find Out) 페어런팅&#x27;을 조명했고, 전문가들은 공감만 있고 구조가 없는 양육은 &#x27;미완성 전략&#x27;이라고 선을 긋는다. 이 논쟁은 한국만의 이야기가 아니라 개발자 포럼인 Hacker News에서도 &quot;Goodbye Gentle Parenting, Hello F-Around and Find Out&quot; 글이 반복적으로 올라오며 토론이 이어졌고, 최근엔 &quot;젠틀 페어런팅이 한 세대의 아이들을 망쳤는가&quot;라는 글까지 올라와 다시 불이 붙었다 — 양육법 논쟁이 이제 기술 커뮤니티에서도 낯설지 않은 화두가 됐다는 뜻이다. 흥미로운 건 AI가 이 논쟁에 조용히 끼어들었다는 점 — HCI 연구자들이 7~13세 자녀를 둔 부모 13쌍을 심층 인터뷰한 결과, 거의 모든 부모가 아이의 AI 사용을 &#x27;감독 없이는 절대 허용 안 함&#x27;이라 답했고, &#x27;AI가 답을 바로 주니 생각을 안 하고 베낀다&#x27;는 우려가 공통적으로 나왔다. 동시에 자기주도 학습 연구들은 한결같이 같은 결론에 도달한다: 부모가 통제하지 않고 자율성을 지지할수록(autonomy-supportive) 아이의 숙제 완수율과 시간관리 능력이 더 좋아진다는 것. 서울경제에 따르면 AI 등장으로 글로벌 에듀테크 시장이 2030년 8,000억 달러(약 1,068조원) 규모로 커질 전망인데, 그 성장의 핵심 카테고리 중 하나가 바로 &#x27;자기주도학습&#x27; 콘텐츠다 — 조용한 양육 담론의 변화가 조 단위 시장의 방향과도 맞물려 있는 셈이다. 결국 &#x27;숙제 다 했어?&#x27;를 &#x27;오늘 뭐부터 할까?&#x27;로 바꾸는 작은 질문법 하나가, 이 모든 학술 논문과 시장 데이터가 돌아서 도달하는 결론과 정확히 같은 방향을 가리키고 있다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://www.theguardian.com/lifeandstyle/2026/jan/29/the-rise-of-fafo-parenting-is-this-the-end-of-gentle-child-rearing" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>The rise of Fafo parenting: is this the end of gentle child rearing? — The Guardian</b><span>10년 가까이 이어진 &#x27;젠틀 페어런팅&#x27; 트렌드에 대한 역풍으로 &#x27;FAFO 페어런팅&#x27;이 부상, 공감 중심 양육의 피로감을 다룬 심층 기사.</span></a><small class="rdate">2026-01-29</small></li><li><span class="t">R02</span><a class="rlink" href="https://dl.acm.org/doi/10.1145/3772318.3790479" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Understanding Parents&#x27; Perspectives on Responsible AI for Children&#x27;s Self-Directed Learning (ACM)</b><span>7~13세 자녀 부모 13쌍 포커스그룹 연구. 참가자 전원이 &#x27;AI 사용은 감독 하에서만&#x27; 허용한다고 답했고, 아이의 AI 과의존을 공통적으로 우려.</span></a><small class="rdate">2026-04-13</small></li><li><span class="t">R03</span><a class="rlink" href="https://link.springer.com/article/10.1007/s12310-026-09856-4" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>&quot;Support Me and I&#x27;ll Do better&quot;: Autonomy-supportive Parenting and Homework Outcomes</b><span>10~14세 자녀 226가구 연구. 자율성 지지형 부모 개입이 숙제 시간관리·완수율·주의산만 감소와 유의미하게 연결된다는 결과.</span></a><small class="rdate">2026</small></li><li><span class="t">R04</span><a class="rlink" href="https://arxiv.org/html/2510.24070" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Building AI Literacy at Home: How Families Navigate Children&#x27;s Self-Directed Learning with AI (arXiv)</b><span>&#x27;아이가 AI 답을 그냥 베끼고 생각을 안 한다&#x27;는 부모들의 공통된 우려와, 공동학습(co-learning)으로 대응하는 가정들의 전략을 분석.</span></a><small class="rdate">2026</small></li><li><span class="t">R05</span><a class="rlink" href="https://kingskids-academy.com/blog/overcoming-the-gentle-parenting-backlash" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Overcoming the Gentle Parenting Backlash</b><span>2026년 양육 트렌드로 &#x27;권위있는(authoritative) 양육&#x27;으로의 중간지대 이동을 제시, 젠틀 페어런팅 피로감에 대한 실무적 대응법 정리.</span></a><small class="rdate">2026</small></li><li><span class="t">R06</span><a class="rlink" href="https://news.ycombinator.com/item?id=44685572" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Goodbye Gentle Parenting, Hello &#x27;F-Around and Find Out&#x27; — Hacker News</b><span>&#x27;젠틀 페어런팅&#x27;에서 &#x27;FAFO 페어런팅&#x27;으로의 전환을 다룬 글이 HN에서 여러 차례 재게시되며 토론된 스레드 중 하나.</span></a><small class="rdate">2025-07-25</small></li><li><span class="t">R07</span><a class="rlink" href="https://news.ycombinator.com/item?id=49658741" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Has Gentle Parenting Ruined a Generation of Kids? — Hacker News</b><span>젠틀 페어런팅에 대한 비판적 재평가를 다룬 최신(2026-09) 글, 개발자 커뮤니티에서도 이 논쟁이 이어지고 있음을 보여준다.</span></a><small class="rdate">2026-09-11</small></li><li><span class="t">R08</span><a class="rlink" href="https://www.sedaily.com/article/13841607" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>&quot;AI등장에 에듀테크 시장 2030년 1000조…韓 후발주자&quot; — 서울경제</b><span>AI·클라우드·AR 등 ICT를 접목한 에듀테크 시장이 연평균 15% 성장해 2030년 8,000억 달러(약 1,068조원) 규모에 이를 전망이라는 보고서 분석. 자기주도학습 콘텐츠가 핵심 성장 카테고리로 꼽힘.</span></a><small class="rdate">2026</small></li></ul><p class="research-note">ℹ️ NewsHADA/GeekNews(RSS 최신 50건 + &#x27;TTS/Clef/parenting&#x27; 키워드 검색)에서는 이 토픽에 대한 직접적인 관련 게시물을 찾지 못했다. GeekNews는 개발자/기술/스타트업 중심 뉴스 사이트라 &#x27;젠틀 페어런팅&#x27;·&#x27;자기주도학습 육아&#x27; 같은 순수 육아 담론은 다루지 않는 편이라는 게 가장 그럴듯한 이유다. 억지로 약한 매칭(LEGO AI 생성기, 데스크톱 정리 앱 등 키워드만 겹치는 글)을 소스로 넣지 않고 honest finding으로 남긴다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (4)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">초등 자녀 자기주도력 500% 높여주는 챗GPT 프롬프트 8가지</div><div class="ref-hook">숙제를 대신 해주는 게 아니라 질문하게 만드는 프롬프트 8가지.</div><div class="ref-links"><a href="https://www.threads.com/@ai_subjob/post/Dch_yGoINia" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-08-28%20%EC%95%84%EC%9D%B4%20%EC%9E%90%EA%B8%B0%EC%A3%BC%EB%8F%84%EB%A0%A5%20%EC%B1%97GPT%20%ED%94%84%EB%A1%AC%ED%94%84%ED%8A%B8%208%EA%B0%80%EC%A7%80%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">육아 기준 28가지 - jooshik_k</div><div class="ref-hook">불안한 부모를 위한 28개 체크리스트, 인스타그램 캡션 하나가 수만 번 공유됐다.</div><div class="ref-links"><a href="https://www.instagram.com/p/DdJbU36lMyT/" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-14%20%EC%9C%A1%EC%95%84%20%EA%B8%B0%EC%A4%80%2028%EA%B0%80%EC%A7%80%20-%20jooshik_k%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">03</span><div class="ref-body"><div class="ref-title">&quot;숙제 다 했어?&quot; 대신 이 말로 — 잔소리 없이 스스로 숙제하는 아이로 키우기</div><div class="ref-hook">확인형 질문 하나를 바꾸는 것만으로 아이가 스스로 움직이기 시작한다.</div><div class="ref-links"><a href="https://www.threads.com/@hyorin_papa2/post/DdXlJMNEj70" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-17%20%EC%88%99%EC%A0%9C%20%EB%8B%A4%20%ED%96%88%EC%96%B4%20%EB%8C%80%EC%8B%A0%20%EC%9D%B4%20%EB%A7%90%EB%A1%9C%20-%20%EC%9E%90%EA%B8%B0%EC%A3%BC%EB%8F%84%ED%95%99%EC%8A%B5%20%EC%A7%88%EB%AC%B8%EB%B2%95%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">04</span><div class="ref-body"><div class="ref-title">아들이 커서도 엄마랑 가까운 사이로 남는, 지금 해두면 좋은 7가지</div><div class="ref-hook">지금 당장 할 수 있는 7가지, 아들과의 거리를 미리 좁혀두는 법.</div><div class="ref-links"><a href="https://www.threads.com/@lovely_onujung/post/Dd0EqcrHfyT" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-28%20%EC%95%84%EB%93%A4%EC%9D%B4%20%EC%BB%A4%EC%84%9C%EB%8F%84%20%EC%97%84%EB%A7%88%EB%9E%91%20%EA%B0%80%EA%B9%8C%EC%9A%B4%20%EC%82%AC%EC%9D%B4%EB%A1%9C%20%EB%82%A8%EB%8A%94%207%EA%B0%80%EC%A7%80%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+
+  <footer class="foot"><span>2026-10-04</span><span>Automatically generated · Threads Weekly (Sample Issue)</span></footer>
+</div>
+<script>
+(function () {
+  var KEY = 'threads-weekly-theme';
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-switch button');
+  function apply(mode) {
+    if (mode === 'light' || mode === 'dark') { root.setAttribute('data-theme', mode); }
+    else { root.removeAttribute('data-theme'); mode = 'system'; }
+    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.themeChoice === mode); });
+  }
+  var saved = localStorage.getItem(KEY) || 'system';
+  apply(saved);
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.dataset.themeChoice;
+      localStorage.setItem(KEY, mode);
+      apply(mode);
+    });
+  });
+})();
+</script>
+</body>
+</html>
