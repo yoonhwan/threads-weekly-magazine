@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>스레드 위클리</title>
+  <style>
+    :root {
+      --red: #e30613;
+      --ink: #111;
+      --paper: #fff;
+      --soft: #f2f2f2;
+      --muted: #686868;
+      --line: #c8c8c8;
+      --font: "Helvetica Neue", "Akzidenz-Grotesk", Inter, Arial, "Apple SD Gothic Neo", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    }
+    :root[data-theme="light"] { --ink:#111; --paper:#fff; --soft:#f2f2f2; --muted:#686868; --line:#c8c8c8; }
+    :root[data-theme="dark"] { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; }
+    button { font:inherit; }
+    h1,h2,h3,p,figure,blockquote,ol,ul { margin:0; }
+    ol,ul { padding:0; }
+    .page { width:min(100% - 40px, 1280px); margin:0 auto; padding:28px 0 64px; }
+    .grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; }
+    .kicker { color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .rule { border-top:1px solid var(--ink); }
+
+    .mast { border-top:8px solid var(--red); padding-top:18px; }
+    .brand { grid-column:1 / span 5; font-size:clamp(1.1rem,2vw,1.65rem); font-weight:900; letter-spacing:-.04em; line-height:1; }
+    .issue { grid-column:9 / -1; text-align:right; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .hero { margin-top:72px; align-items:end; }
+    .hero-date { grid-column:1 / span 8; font-size:clamp(2.4rem,7vw,6.4rem); font-weight:900; letter-spacing:-.06em; line-height:.9; word-break:keep-all; }
+    .hero-note { grid-column:10 / -1; padding-top:12px; border-top:1px solid var(--ink); font-size:.82rem; font-weight:700; }
+    .hero-note span { display:block; margin-top:8px; color:var(--muted); font-weight:500; }
+
+    .metrics { margin-top:64px; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+    .metric { grid-column:span 3; min-height:145px; padding:16px 12px 18px 0; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; }
+    .metric:last-child { border-right:0; }
+    .metric strong { font-size:clamp(2.2rem,4.6vw,4.6rem); font-weight:900; letter-spacing:-.06em; line-height:.9; font-variant-numeric:tabular-nums; }
+    .metric span { max-width:10rem; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .metric em { color:var(--red); font-style:normal; }
+
+    .jump { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 20px; }
+    .jump a { text-decoration:none; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .jump a::before { content:"↘ "; color:var(--red); }
+
+    .theme-switch { margin-top:16px; display:flex; gap:6px; }
+    .theme-switch button { border:1px solid var(--line); background:transparent; color:var(--muted); padding:5px 11px; font-size:.68rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; }
+    .theme-switch button.on { border-color:var(--red); color:var(--red); }
+
+    .section { margin-top:120px; }
+    .section-head { align-items:end; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+    .section-index { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; }
+    .section-title { grid-column:2 / span 7; font-size:clamp(1.6rem,3vw,3.1rem); font-weight:900; letter-spacing:-.05em; line-height:1.05; }
+    .section-meta { grid-column:10 / -1; text-align:right; color:var(--muted); font-size:.76rem; font-weight:700; line-height:1.4; }
+
+    /* v2: 멤버 기사는 짧은 레퍼런스 줄(후크 한 줄 + 링크)로만 표시 — 본문 덤프 없음 */
+    .refs { margin-top:10px; }
+    .refs-head { font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .ref-row { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:baseline; padding:10px 0; border-bottom:1px solid var(--line); font-size:.85rem; }
+    .ref-row:last-child { border-bottom:0; }
+    .ref-row .no { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ref-row .ref-body { grid-column:2 / span 9; min-width:0; }
+    .ref-row .ref-title { font-weight:700; letter-spacing:-.01em; }
+    .ref-row .ref-hook { color:var(--muted); margin-top:2px; }
+    .ref-row .ref-links { margin-top:4px; font-size:.76rem; font-weight:700; }
+    .ref-row .ref-links a { color:var(--red); text-decoration:none; border-bottom:1px solid var(--red); margin-right:14px; }
+
+    .research { margin-top:26px; padding:24px 0 10px; background:var(--soft); }
+    .research-inner { padding:24px 28px; }
+    .research-head { font-size:.82rem; font-weight:900; letter-spacing:.04em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .research-head .dot { color:var(--red); }
+    .research-narrative { font-size:1.02rem; line-height:1.85; color:var(--ink); max-width:72ch; margin-bottom:22px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+    .links { list-style:none; }
+    .links li { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:start; padding:13px 0; border-bottom:1px solid var(--line); }
+    .links li:last-child { border-bottom: 0; }
+    .links li > .t { grid-column:1 / span 2; color:var(--red); font-size:.68rem; font-weight:900; letter-spacing:.04em; }
+    .links a.rlink { grid-column:3 / span 7; min-width:0; display:flex; flex-direction:column; text-decoration:none; }
+    .links a.rlink b { font-size:.92rem; line-height:1.35; }
+    .links a.rlink span { margin-top:3px; color:var(--muted); font-size:.78rem; line-height:1.5; }
+    .links li > small.rdate { grid-column:11 / -1; color:var(--muted); font-size:.72rem; text-align:right; }
+    .research-empty { padding:16px 0; color:var(--muted); font-size:.85rem; }
+    .research-note { margin-top:16px; padding:12px 14px; background:#fff; border-left:3px solid var(--red); color:var(--muted); font-size:.78rem; line-height:1.6; }
+    .links a.rlink .src-tag { order:-1; align-self:flex-start; margin-bottom:5px; display:inline-block; font-size:.62rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; }
+    .links a.rlink .src-tag-web { color:var(--muted); }
+    .links a.rlink .src-tag-newshada { color:var(--red); border-color:var(--red); }
+    .links a.rlink .src-tag-hackernews { color:#ff6600; border-color:#ff6600; }
+    .links a.rlink .src-tag-korean_economic_news { color:#0a5c36; border-color:#0a5c36; }
+
+    .foot { margin-top:70px; padding-top:12px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+
+    @media (max-width: 760px) {
+      .page { width:min(100% - 28px, 680px); padding-top:18px; }
+      .grid { column-gap:10px; }
+      .brand { grid-column:1 / span 7; }
+      .issue { grid-column:9 / -1; }
+      .hero { margin-top:50px; }
+      .hero-date { grid-column:1 / -1; font-size:clamp(2.6rem,13vw,4.4rem); line-height:.95; }
+      .hero-note { grid-column:7 / -1; margin-top:34px; }
+      .metrics { margin-top:42px; }
+      .metric { grid-column:span 6; min-height:112px; padding:13px 8px 13px 0; border-bottom:1px solid var(--line); }
+      .metric:nth-child(even) { border-right:0; padding-left:10px; }
+      .metric strong { font-size:2.3rem; }
+      .jump { gap:8px 14px; }
+      .section { margin-top:78px; }
+      .section-index { grid-column:1 / span 2; }
+      .section-title { grid-column:3 / -1; font-size:1.9rem; }
+      .section-meta { grid-column:3 / -1; margin-top:14px; justify-self:start; text-align:left; }
+      .ref-row { grid-template-columns:28px 1fr; gap:4px 12px; }
+      .ref-row .no,.ref-row .ref-body { grid-column:auto; }
+      .links li { grid-template-columns:72px 1fr; gap:8px 12px; }
+      .links li > .t,.links a.rlink,.links li > small.rdate { grid-column:auto; }
+      .links a.rlink { grid-column:2; }
+      .links li > small.rdate { grid-column:2; text-align:left; }
+      .research-narrative { max-width:none; }
+      .research-inner { padding:18px 14px; }
+      .foot { flex-direction:column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html{scroll-behavior:auto} }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <div class="grid"><div class="brand">스레드<br>위클리</div><div class="issue">Scrap &amp; Research Digest<br>Threads Weekly</div></div>
+    <div class="grid hero"><h1 class="hero-date">2026.10.15</h1><p class="hero-note">Sample Issue v2<span>큐레이션·에디토리얼 리서치</span></p></div>
+  </header>
+
+  <section class="grid metrics" aria-label="이번 호 통계">
+    <div class="metric"><strong>3</strong><span>다룬 토픽 수</span></div>
+    <div class="metric"><strong>18</strong><span>리서치 소스 수</span></div>
+    <div class="metric"><strong>49</strong><span>기간<em>(일)</em></span></div>
+    <div class="metric"><strong>10</strong><span>참고 원문<em>(각주)</em></span></div>
+  </section>
+  <nav class="jump" aria-label="바로가기"><a href="#topic-decision-models-war">&quot;또 Jev야..&quot; — &#x27;</a><a href="#topic-consumer-gpu-big-model">27B를 8GB에, 125</a><a href="#topic-personal-ai-box">구독 없는 &#x27;AI 상자&#x27; </a></nav>
+  <div class="theme-switch" role="group" aria-label="테마 선택">
+    <button type="button" data-theme-choice="system">시스템</button>
+    <button type="button" data-theme-choice="light">라이트</button>
+    <button type="button" data-theme-choice="dark">다크</button>
+  </div>
+
+  <section id="topic-decision-models-war" class="section">
+    <div class="grid section-head"><span class="section-index">01</span><h2 class="section-title">&quot;또 Jev야..&quot; — &#x27;결정 모델&#x27;이 2주마다 새로 태어나는 중</h2><p class="section-meta">Cloudflare Clef가 터지자 OpenAI가 일주일 만에 Decisions API로 맞받고, llama.cpp가 즉시 로컬 지원을 붙였다. 심지어 누가 더 빠른지 팩맨으로 대결까지 붙었다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">&quot;젠장 또 Jev야..&quot; 라는 짧은 탄식에서 시작된 &#x27;결정 모델&#x27; 전쟁이 보름 만에 세 번째 라운드에 들어갔다. 10/1 클라우드플레어가 Clef·Clef-flash를 Apache 2.0으로 공개하며 Jev에 맞불을 놓자, 같은 주 llama.cpp가 로컬 추론 공식 지원을 붙였고, 10/6에는 오픈AI가 GPT-6 Luna 기반 Decisions API를 퍼블릭 베타로 던졌다. 오픈AI 쪽은 토큰당 0.10달러에 출력 과금이 전혀 없는 구조로, 응답 속도를 Responses API보다 10배(약 150ms) 빠르다고 못박았다. 재미있는 건 이 경쟁을 지켜보던 개발자들이 직접 대결을 붙이기 시작했다는 점 — HN에는 Jev·Clef·Clef-flash·GPT-6 Luna가 실시간으로 팩맨을 플레이하게 만들어 순위표를 공개한 &#x27;Jevman&#x27; 프로젝트가 올라왔고(81포인트), 결정 모델 전용 벤치마크 &#x27;JevBench&#x27;도 등장해 Clef와 pplx-decider 등 17개 모델을 나란히 줄 세웠다. 10/10엔 클라우드플레어가 한발 더 나가 이미지·영상까지 읽는 Clef-Omni를 추가하며 멀티모달 영역으로 전장을 넓혔다. 스타트업 Upright은 &quot;기존 결정 모델이 EV(기대값) 계산에서 명령어 추종 성향 때문에 판단력이 떨어진다&quot;며 Jev·Clef·OpenAI 결정 모델을 모두 이긴다는 자체 모델 Eevo를 10/14에 내놨다 — 이쯤 되면 결정 모델은 더 이상 빅테크 두 곳의 싸움이 아니라 생태계 자체가 됐다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=34621" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Cloudflare, 의사결정 모델 Clef와 RL 미세조정 서비스 공개 | GeekNews</b><span>Clef·Clef-flash는 문장 생성 대신 선택지·점수·확률을 반환, Jev API와 호환되며 Apache 2.0 오픈웨이트. Clef-flash 응답속도 38.8ms(Jev 524.1ms)로 기록.</span></a><small class="rdate">2026-10-02</small></li><li><span class="t">R02</span><a class="rlink" href="https://news.ycombinator.com/item?id=49923692" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Clef: Open-weight decision models, and new RL fine-tuning platform — Hacker News</b><span>642포인트 218댓글. 클라우드플레어 Clef 발표에 대한 역대급 토론 스레드, 가격·벤치마크 공정성 논쟁 중심.</span></a><small class="rdate">2026-10-01</small></li><li><span class="t">R03</span><a class="rlink" href="https://opper.ai/jevman-benchmark/" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Show HN: Jevman – AI decision models play Pac-Man</b><span>Jev, Clef, Clef-flash, GPT-6 Luna, Laya를 팩맨 대결로 실시간 벤치마크. 81포인트 23댓글, 오픈소스 리포로 누구나 자기 모델 참가 가능.</span></a><small class="rdate">2026-10-08</small></li><li><span class="t">R04</span><a class="rlink" href="https://leanmcp.github.io/jevbench/" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>JevBench: Benchmarking decision models (Clef, pplx-decider and 15 more)</b><span>결정 모델 전용 벤치마크 등장 — Clef, pplx-decider 등 17개 모델을 한 판에 비교.</span></a><small class="rdate">2026-10-12</small></li><li><span class="t">R05</span><a class="rlink" href="https://runtimewire.com/article/cloudflare-clef-omni-multimodal-decision-model" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Cloudflare puts audio and video into its decision model with Clef-Omni</b><span>Clef가 텍스트·이미지를 넘어 오디오·영상까지 받는 멀티모달 버전(Clef-Omni)으로 확장.</span></a><small class="rdate">2026-10-10</small></li><li><span class="t">R06</span><a class="rlink" href="https://pondero.ai/news/2026-10-08-openai-decisions-api" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>OpenAI ships a Decisions API that returns a fixed answer in about 150 milliseconds — pondero.ai</b><span>10/6 공개 베타. gpt-6-luna 기반, predicate/choice/score 3종 출력, 입력 토큰당 $0.10, 출력·캐시 과금 없음. Responses API보다 10배 빠름(약 150ms, 자체 수치).</span></a><small class="rdate">2026-10-08</small></li><li><span class="t">R07</span><a class="rlink" href="https://www.uprightproject.com/eevo/" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Show HN: Eevo – Consequential Decision Model</b><span>Jev·Clef·OpenAI Decisions API를 기대값(EV) 계산 벤치마크에서 능가한다고 주장하는 신생 결정 모델, 10/14 공개.</span></a><small class="rdate">2026-10-14</small></li><li><span class="t">R08</span><a class="rlink" href="https://www.mk.co.kr/news/business/11971782" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>AI로 비용절감 그쳐선 안돼… 낡은 조직문화 바꿔야 생산성 올라 — 매경</b><span>결정 모델류 AI 효율화가 &#x27;비용 절감&#x27;에만 머물면 진짜 성장이 아니라는 KDI발 분석 — 빠른 판단 자동화가 조직 전체 생산성으로 이어지려면 구조 개편이 함께 필요하다는 경고.</span></a><small class="rdate">2026-02-26</small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (4)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">젠장 또 Jev야.. — Cloudflare, 결정 모델 Clef / Clef-flash 공개</div><div class="ref-hook">&quot;젠장 또 Jev야&quot; — 클라우드플레어가 2주 만에 경쟁 모델로 맞받아쳤다.</div><div class="ref-links"><a href="https://blog.cloudflare.com/clef-decision-models/" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-03%20Cloudflare%20Clef%20%EA%B2%B0%EC%A0%95%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">llama.cpp, 144M~27B &#x27;의사결정(Decision) 모델&#x27; 공식 지원 추가</div><div class="ref-hook">144M부터 27B까지, 로컬에서 바로 돌리는 의사결정 모델이 공식 지원에 들어갔다.</div><div class="ref-links"><a href="https://huggingface.co/blog/ggml-org/decision-models-in-llamacpp" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-03%20llama.cpp%20Decision%20Models%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">03</span><div class="ref-body"><div class="ref-title">오픈AI &#x27;Decisions API&#x27; 퍼블릭 베타 공개</div><div class="ref-hook">오픈AI도 참전 — GPT-6 Luna 기반, 10배 빠른 분류 전용 엔드포인트.</div><div class="ref-links"><a href="https://developers.openai.com/api/docs/guides/decisions" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-07%20OpenAI%20Decisions%20API%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">04</span><div class="ref-body"><div class="ref-title">의사결정 모델도 멀티모달로 진화… vLLM·Cloudflare 오픈소스 모델 Decision 3.0, Clef-omni 공개</div><div class="ref-hook">텍스트 넘어 이미지·영상까지 — 결정모델이 멀티모달로 진화했다.</div><div class="ref-links"><a href="https://www.aitimes.com/news/articleView.html?idxno=216213" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-14%20%EC%9D%98%EC%82%AC%EA%B2%B0%EC%A0%95%EB%AA%A8%EB%8D%B8%20%EB%A9%80%ED%8B%B0%EB%AA%A8%EB%8B%AC%20Decision3.0%20Clef-omni%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-consumer-gpu-big-model" class="section">
+    <div class="grid section-head"><span class="section-index">02</span><h2 class="section-title">27B를 8GB에, 125B를 집 GPU에 — 소형화 전쟁의 전선 이동</h2><p class="section-meta">양자화와 MoE 오프로딩 기술이 한 달 사이 또 한 단계 도약했다. &#x27;8GB VRAM으로 뭘 돌릴 수 있나&#x27;가 &#x27;내 데스크톱에서 125B MoE를 돌린다&#x27;로 바뀌는 중.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">&#x27;8GB VRAM에서 뭘 돌릴 수 있나&#x27;라는 질문이 &#x27;내 책상 밑 데스크톱에서 125B MoE를 돌린다&#x27;로 바뀌는 데 걸린 시간은 한 달이 채 안 됐다. 10/12 Saluki-27B 양자화 벤치마크는 공짜 점심이 없다는 걸 숫자로 보여줬다 — 8GB로 압축하니 도구 호출 성능은 오히려 올랐는데 수학 점수는 17점이나 빠졌다. 바로 다음 주 Strata 프로젝트는 Qwen3.8-Flash-Next(125B-A6B MoE)를 소비자급 GPU 한 대에서 돌리는 CPU/디스크 오프로딩 기법을 공개했는데, HN에서는 한 개발자가 &quot;GGUF 기반 LoRA로 같은 모델을 40GB VRAM에서 학습까지 돌렸다(초당 200토큰)&quot;며 화답하는 스레드가 올라왔다 — 추론을 넘어 로컬 파인튜닝까지 사정권에 들어왔다는 신호다. 같은 주 VKORE는 &quot;범용 NPU는 추론 전용, 학습은 불가능하다&quot;는 통설 자체를 뒤집었다고 주장했다. 배경에는 보안 때문에 어쩔 수 없이 로컬 LLM을 써야 하는 현실적 수요가 있다 — 9/29 Reddit/커뮤니티 스레드에서는 &quot;12GB VRAM으로 뭘 써야 하나&quot;가 꾸준히 반복되는 질문으로 남아 있다. HN에서 실제 프로슈머 장비(Mac M4 Pro 24GB)로 4b~35b 모델을 테스트한 사례도 있는데, &#x27;모든 작업에 최고인 LLM은 없다&#x27;는 결론 — 작업별로 작은 모델과 큰 모델을 번갈아 쓰는 게 실전 답이라는 쪽으로 커뮤니티 공감대가 모이고 있다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://github.com/woct0rdho/transformers5-qwen3.5-recipe" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Show HN: LoRA over GGUF – Train Qwen3.8-Flash-Next in 40G VRAM</b><span>Qwen3.8-Flash-Next(125B-A6B+51B engram)를 40GiB VRAM에서 CPU 오프로드 없이 학습, Strix Halo에서 200 tok/s 달성. Strata와 비슷한 체급의 모델을 추론 아닌 &#x27;학습&#x27;까지 로컬로 끌고 온 사례.</span></a><small class="rdate">2026-10-10</small></li><li><span class="t">R02</span><a class="rlink" href="https://news.ycombinator.com/item?id=49410310" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>I&#x27;ve tested some local LLMs on prosumer hardware, here are some findings</b><span>Mac M4 Pro 24GB에서 4b~35b 모델 실측 비교 — 작업별로 최적 모델이 다르다(요약은 Gemma, RAG는 gpt-oss, 코드해석은 Qwen3.8-27B 5tok/s). &#x27;모든 작업에 최고인 단일 LLM은 없다&#x27;는 결론.</span></a><small class="rdate">2026-08-23</small></li><li><span class="t">R03</span><a class="rlink" href="https://realtimex.ai" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>RealTimeX – Local-first private AI agents</b><span>로컬 우선(local-first)을 내세운 에이전트 런타임 — 민감 작업은 로컬, 무거운 단계만 선택적으로 클라우드로 전환하는 하이브리드 구조가 커뮤니티 트렌드로 자리잡는 중.</span></a><small class="rdate">2026-03-05</small></li><li><span class="t">R04</span><a class="rlink" href="https://news.hada.io" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>27B 모델을 8GB로 — 도구 호출은 오히려 상승, 수학은 17점 하락 (Saluki-27B)</b><span>소스 스크랩(2026-10-12 Saluki-27B 양자화 벤치마크) — 8GB 양자화 시 도구 호출 성능 상승, 수학 벤치마크 17점 하락이라는 상반된 결과.</span></a><small class="rdate">2026-10-12</small></li><li><span class="t">R05</span><a class="rlink" href="" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>없음</b><span>이번 토픽(소비자 GPU 로컬 LLM 소형화)은 기술 커뮤니티 소스(GeekNews/HN) 위주로만 확인됨 — 한국 경제뉴스에서 이 구체 토픽(양자화/MoE 오프로딩)을 다룬 기사는 찾지 못함. 억지로 끼워맞추지 않고 정직하게 &#x27;없음&#x27;으로 표시.</span></a><small class="rdate"></small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (4)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">27B 모델을 8GB로 — 도구 호출은 오히려 상승, 수학은 17점 하락</div><div class="ref-hook">27B 모델을 8GB로 압축하니 도구 호출은 오히려 올랐는데 수학은 17점 떨어졌다 — 공짜 점심은 없다.</div><div class="ref-links"><a href="https://huggingface.co/ConwayResearch/Underdog-Saluki-27B-1.0" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-12%20Saluki-27B-%EC%96%91%EC%9E%90%ED%99%94-%EB%B2%A4%EC%B9%98%EB%A7%88%ED%81%AC%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">Strata w/ Qwen3.8-Flash-Next — 소비자 GPU에서 125B MoE 로컬 구동</div><div class="ref-hook">소비자 GPU 한 대로 125B MoE를 돌리는 Strata 오프로딩 기법.</div><div class="ref-links"><a href="https://github.com/Niko1221/Strata" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-13%20Strata%20Qwen3.8-Flash-Next%20%EB%A1%9C%EC%BB%AC%20LLM%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">03</span><div class="ref-body"><div class="ref-title">보안때문에 로컬LLM 쓸수밖에 없는 상황 — 12GB VRAM 모델 추천 스레드</div><div class="ref-hook">보안 때문에 로컬 LLM을 써야 하는 현실적 제약 — 12GB VRAM에서 뭘 쓸까.</div><div class="ref-links"><a href="https://www.threads.com/@charius1004/post/Ddz65OZE2py" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-29%2012GB%20VRAM%20%EB%A1%9C%EC%BB%ACLLM%20%EB%AA%A8%EB%8D%B8%20%EC%B6%94%EC%B2%9C%20%EC%8A%A4%EB%A0%88%EB%93%9C%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">04</span><div class="ref-body"><div class="ref-title">범용 NPU는 추론 전용, 학습은 불가 — VKORE로 뒤집은 이야기</div><div class="ref-hook">범용 NPU는 추론만 되고 학습은 안 된다는 통설을 VKORE가 뒤집었다.</div><div class="ref-links"><a href="https://www.threads.com/@vidraft_lab/post/DeZ9N2jEzdF" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-13%20VKORE%20NPU%20%ED%95%99%EC%8A%B5%20%EA%B0%80%EC%86%8D%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-personal-ai-box" class="section">
+    <div class="grid section-head"><span class="section-index">03</span><h2 class="section-title">구독 없는 &#x27;AI 상자&#x27; 전쟁 — 집에 AI를 한 대 들이는 시대</h2><p class="section-meta">19살 창업자의 3,499달러 Core부터 1,799달러 Oki Home까지, 클라우드 구독 대신 하드웨어 한 대를 사는 개인용 AI 컴퓨터가 쏟아지고 있다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">&#x27;AI는 매달 돈 내는 구독&#x27;이라는 통념이 2026년 10월 들어 흔들리고 있다. 19살 창업자 자인 자바이드가 이끄는 고스트(Ghost) AI는 10/5 &#x27;상자 속 두뇌(brain in a box)&#x27;를 자처하는 개인용 AI 컴퓨터 Core를 공개했다 — 3,499달러, RTX Pro 4000, 64GB RAM, Qwen-3.8-27B 등 3개 모델 내장, 구독료 전혀 없음. 평균 나이 21살 팀이 a16z 주도 1,100만 달러 투자를 받아 하드웨어부터 소프트웨어까지 전부 직접 만들었다. 비슷한 시기 Oki Home도 1,799달러(2TB)로 출시 — RTX 5060 Ti 16GB, 27B 모델이 24시간 로컬로 도는 &#x27;메모리 컴퓨터&#x27; 콘셉트다. 두 제품 모두 핵심 주장은 동일: &#x27;데이터가 집 밖으로 안 나간다, 구독 없다&#x27;. 가격을 뜯어보면 흥미로운 계산이 나온다 — 챗GPT 플러스를 10년 쓰면 약 2,400달러인데, Core는 한 번 사면 평생이다. 다만 하드웨어 양산·AS를 10대 후반~20대 초반 팀이 감당할 수 있을지, 독립 성능 테스트가 아직 없다는 점은 의문으로 남는다. 이 흐름은 기업 쪽에서도 같은 방향으로 흐르고 있다 — 10/4 스크랩된 &#x27;클로드 엔터프라이즈 로컬서버 전환 사례&#x27;처럼, 개인과 기업 모두 클라우드 API 구독에서 &#x27;한 대 사서 내 공간에 두는&#x27; 모델로 무게추가 옮겨가는 신호가 동시에 나타나고 있다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://unread.co.kr/news/6285" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>19살이 만든 3,499달러 &#x27;개인 AI 컴퓨터&#x27;…구독 없이 집에서 24시간 돈다 — 언리드</b><span>고스트 AI의 Core(3,499달러) 상세 스펙과 창업 배경. RTX Pro 4000, 64GB RAM, Qwen-3.8-27B 초당 77토큰, a16z 1,100만달러 시드.</span></a><small class="rdate">2026-10-07</small></li><li><span class="t">R02</span><a class="rlink" href="https://okihome.ai/" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Oki Home — Your personal AI, at home (공식 사이트)</b><span>1,799달러(2TB)~2,300달러(이후가), RTX 5060 Ti 16GB, 27B 모델 24/7 온디바이스 구동, 구독 없음.</span></a><small class="rdate">2026-10-07</small></li><li><span class="t">R03</span><a class="rlink" href="https://abit.ee/en/ssd-and-hdd/oki-oki-home-file-server-ai-home-server-gadgets-en" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Startup Oki unveils $1,800 home file server with built-in AI</b><span>독립 매체의 Oki Home 리뷰 — 27B 모델이 실제 가정용 요청을 얼마나 잘 처리할지는 아직 독립 테스트 미비라는 점을 지적.</span></a><small class="rdate">2026-10-07</small></li><li><span class="t">R04</span><a class="rlink" href="" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>없음</b><span>GeekNews에서 이 구체 토픽(개인용 AI 전용 하드웨어 박스)을 다룬 글은 이번 검색에서 찾지 못함 — 정직하게 &#x27;없음&#x27; 표시.</span></a><small class="rdate"></small></li><li><span class="t">R05</span><a class="rlink" href="" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>없음</b><span>Hacker News Algolia 검색에서도 Core/Oki Home 단독 토픽 스토리는 확인 안 됨 — &#x27;없음&#x27;으로 표시.</span></a><small class="rdate"></small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">Oki Home — 개인용 AI 컴퓨터 ($1,799)</div><div class="ref-hook">1,799달러, 27B 모델 내장, 구독 없이 24시간 도는 개인용 AI 홈서버.</div><div class="ref-links"><a href="https://okihome.ai/" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-08%20Oki%20Home%20%EA%B0%9C%EC%9D%B8%EC%9A%A9%20AI%20%EC%BB%B4%ED%93%A8%ED%84%B0%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">클로드 헤비유저(기업) 사례 — Enterprise API → 로컬 AI 서버 전환 흐름</div><div class="ref-hook">기업도 Claude Enterprise API에서 로컬 AI 서버로 갈아타는 흐름이 시작됐다.</div><div class="ref-links"><a href="https://www.threads.com/@slamslam__/post/DXf2MFEE8OD" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-04%20%ED%81%B4%EB%A1%9C%EB%93%9C%20%EC%97%94%ED%84%B0%ED%94%84%EB%9D%BC%EC%9D%B4%EC%A6%88%20%EB%A1%9C%EC%BB%AC%EC%84%9C%EB%B2%84%20%EC%A0%84%ED%99%98%20%EC%82%AC%EB%A1%80%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+
+  <footer class="foot"><span>2026-10-15</span><span>Automatically generated · Threads Weekly (Sample Issue)</span></footer>
+</div>
+<script>
+(function () {
+  var KEY = 'threads-weekly-theme';
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-switch button');
+  function apply(mode) {
+    if (mode === 'light' || mode === 'dark') { root.setAttribute('data-theme', mode); }
+    else { root.removeAttribute('data-theme'); mode = 'system'; }
+    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.themeChoice === mode); });
+  }
+  var saved = localStorage.getItem(KEY) || 'system';
+  apply(saved);
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.dataset.themeChoice;
+      localStorage.setItem(KEY, mode);
+      apply(mode);
+    });
+  });
+})();
+</script>
+</body>
+</html>
