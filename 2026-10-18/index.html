@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>스레드 위클리</title>
+  <style>
+    :root {
+      --red: #e30613;
+      --ink: #111;
+      --paper: #fff;
+      --soft: #f2f2f2;
+      --muted: #686868;
+      --line: #c8c8c8;
+      --font: "Helvetica Neue", "Akzidenz-Grotesk", Inter, Arial, "Apple SD Gothic Neo", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    }
+    :root[data-theme="light"] { --ink:#111; --paper:#fff; --soft:#f2f2f2; --muted:#686868; --line:#c8c8c8; }
+    :root[data-theme="dark"] { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; }
+    button { font:inherit; }
+    h1,h2,h3,p,figure,blockquote,ol,ul { margin:0; }
+    ol,ul { padding:0; }
+    .page { width:min(100% - 40px, 1280px); margin:0 auto; padding:28px 0 64px; }
+    .grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; }
+    .kicker { color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .rule { border-top:1px solid var(--ink); }
+
+    .mast { border-top:8px solid var(--red); padding-top:18px; }
+    .brand { grid-column:1 / span 5; font-size:clamp(1.1rem,2vw,1.65rem); font-weight:900; letter-spacing:-.04em; line-height:1; }
+    .issue { grid-column:9 / -1; text-align:right; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .hero { margin-top:72px; align-items:end; }
+    .hero-date { grid-column:1 / span 8; font-size:clamp(2.4rem,7vw,6.4rem); font-weight:900; letter-spacing:-.06em; line-height:.9; word-break:keep-all; }
+    .hero-note { grid-column:10 / -1; padding-top:12px; border-top:1px solid var(--ink); font-size:.82rem; font-weight:700; }
+    .hero-note span { display:block; margin-top:8px; color:var(--muted); font-weight:500; }
+
+    .metrics { margin-top:64px; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+    .metric { grid-column:span 3; min-height:145px; padding:16px 12px 18px 0; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; }
+    .metric:last-child { border-right:0; }
+    .metric strong { font-size:clamp(2.2rem,4.6vw,4.6rem); font-weight:900; letter-spacing:-.06em; line-height:.9; font-variant-numeric:tabular-nums; }
+    .metric span { max-width:10rem; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .metric em { color:var(--red); font-style:normal; }
+
+    .jump { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 20px; }
+    .jump a { text-decoration:none; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .jump a::before { content:"↘ "; color:var(--red); }
+
+    .theme-switch { margin-top:16px; display:flex; gap:6px; }
+    .theme-switch button { border:1px solid var(--line); background:transparent; color:var(--muted); padding:5px 11px; font-size:.68rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; }
+    .theme-switch button.on { border-color:var(--red); color:var(--red); }
+
+    .section { margin-top:120px; }
+    .section-head { align-items:end; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+    .section-index { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; }
+    .section-title { grid-column:2 / span 7; font-size:clamp(1.6rem,3vw,3.1rem); font-weight:900; letter-spacing:-.05em; line-height:1.05; }
+    .section-meta { grid-column:10 / -1; text-align:right; color:var(--muted); font-size:.76rem; font-weight:700; line-height:1.4; }
+
+    /* v2: 멤버 기사는 짧은 레퍼런스 줄(후크 한 줄 + 링크)로만 표시 — 본문 덤프 없음 */
+    .refs { margin-top:10px; }
+    .refs-head { font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .ref-row { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:baseline; padding:10px 0; border-bottom:1px solid var(--line); font-size:.85rem; }
+    .ref-row:last-child { border-bottom:0; }
+    .ref-row .no { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ref-row .ref-body { grid-column:2 / span 9; min-width:0; }
+    .ref-row .ref-title { font-weight:700; letter-spacing:-.01em; }
+    .ref-row .ref-hook { color:var(--muted); margin-top:2px; }
+    .ref-row .ref-links { margin-top:4px; font-size:.76rem; font-weight:700; }
+    .ref-row .ref-links a { color:var(--red); text-decoration:none; border-bottom:1px solid var(--red); margin-right:14px; }
+
+    .research { margin-top:26px; padding:24px 0 10px; background:var(--soft); }
+    .research-inner { padding:24px 28px; }
+    .research-head { font-size:.82rem; font-weight:900; letter-spacing:.04em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .research-head .dot { color:var(--red); }
+    .research-narrative { font-size:1.02rem; line-height:1.85; color:var(--ink); max-width:72ch; margin-bottom:22px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+    .links { list-style:none; }
+    .links li { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:start; padding:13px 0; border-bottom:1px solid var(--line); }
+    .links li:last-child { border-bottom: 0; }
+    .links li > .t { grid-column:1 / span 2; color:var(--red); font-size:.68rem; font-weight:900; letter-spacing:.04em; }
+    .links a.rlink { grid-column:3 / span 7; min-width:0; display:flex; flex-direction:column; text-decoration:none; }
+    .links a.rlink b { font-size:.92rem; line-height:1.35; }
+    .links a.rlink span { margin-top:3px; color:var(--muted); font-size:.78rem; line-height:1.5; }
+    .links li > small.rdate { grid-column:11 / -1; color:var(--muted); font-size:.72rem; text-align:right; }
+    .research-empty { padding:16px 0; color:var(--muted); font-size:.85rem; }
+    .research-note { margin-top:16px; padding:12px 14px; background:#fff; border-left:3px solid var(--red); color:var(--muted); font-size:.78rem; line-height:1.6; }
+    .links a.rlink .src-tag { order:-1; align-self:flex-start; margin-bottom:5px; display:inline-block; font-size:.62rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; }
+    .links a.rlink .src-tag-web { color:var(--muted); }
+    .links a.rlink .src-tag-newshada { color:var(--red); border-color:var(--red); }
+    .links a.rlink .src-tag-hackernews { color:#ff6600; border-color:#ff6600; }
+    .links a.rlink .src-tag-korean_economic_news { color:#0a5c36; border-color:#0a5c36; }
+
+    .foot { margin-top:70px; padding-top:12px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+
+    @media (max-width: 760px) {
+      .page { width:min(100% - 28px, 680px); padding-top:18px; }
+      .grid { column-gap:10px; }
+      .brand { grid-column:1 / span 7; }
+      .issue { grid-column:9 / -1; }
+      .hero { margin-top:50px; }
+      .hero-date { grid-column:1 / -1; font-size:clamp(2.6rem,13vw,4.4rem); line-height:.95; }
+      .hero-note { grid-column:7 / -1; margin-top:34px; }
+      .metrics { margin-top:42px; }
+      .metric { grid-column:span 6; min-height:112px; padding:13px 8px 13px 0; border-bottom:1px solid var(--line); }
+      .metric:nth-child(even) { border-right:0; padding-left:10px; }
+      .metric strong { font-size:2.3rem; }
+      .jump { gap:8px 14px; }
+      .section { margin-top:78px; }
+      .section-index { grid-column:1 / span 2; }
+      .section-title { grid-column:3 / -1; font-size:1.9rem; }
+      .section-meta { grid-column:3 / -1; margin-top:14px; justify-self:start; text-align:left; }
+      .ref-row { grid-template-columns:28px 1fr; gap:4px 12px; }
+      .ref-row .no,.ref-row .ref-body { grid-column:auto; }
+      .links li { grid-template-columns:72px 1fr; gap:8px 12px; }
+      .links li > .t,.links a.rlink,.links li > small.rdate { grid-column:auto; }
+      .links a.rlink { grid-column:2; }
+      .links li > small.rdate { grid-column:2; text-align:left; }
+      .research-narrative { max-width:none; }
+      .research-inner { padding:18px 14px; }
+      .foot { flex-direction:column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html{scroll-behavior:auto} }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <div class="grid"><div class="brand">스레드<br>위클리</div><div class="issue">Scrap &amp; Research Digest<br>Threads Weekly</div></div>
+    <div class="grid hero"><h1 class="hero-date">2026.10.18</h1><p class="hero-note">Sample Issue v2<span>큐레이션·에디토리얼 리서치</span></p></div>
+  </header>
+
+  <section class="grid metrics" aria-label="이번 호 통계">
+    <div class="metric"><strong>3</strong><span>다룬 토픽 수</span></div>
+    <div class="metric"><strong>13</strong><span>리서치 소스 수</span></div>
+    <div class="metric"><strong>58</strong><span>기간<em>(일)</em></span></div>
+    <div class="metric"><strong>6</strong><span>참고 원문<em>(각주)</em></span></div>
+  </section>
+  <nav class="jump" aria-label="바로가기"><a href="#topic-silent-judge-models">말 안 하는 AI가 더 바</a><a href="#topic-kakao-side-door">읽지 않을 권리 없는 카톡</a><a href="#topic-voice-clean-clone">목소리는 복제하기 쉬워지고</a></nav>
+  <div class="theme-switch" role="group" aria-label="테마 선택">
+    <button type="button" data-theme-choice="system">시스템</button>
+    <button type="button" data-theme-choice="light">라이트</button>
+    <button type="button" data-theme-choice="dark">다크</button>
+  </div>
+
+  <section id="topic-silent-judge-models" class="section">
+    <div class="grid section-head"><span class="section-index">01</span><h2 class="section-title">말 안 하는 AI가 더 바쁘다 — &#x27;판단만 하는&#x27; 모델들의 조용한 확장</h2><p class="section-meta">텍스트를 생성하지 않고 예/아니오·분류·점수만 매기는 &#x27;결정 모델&#x27;이 한국 오픈소스(nari-decision-4b)와 글로벌 인프라(vLLM Vela 2.0) 양쪽에서 동시에 업그레이드됐다 — 라우팅·가드레일·PII 탐지까지, AI 비용의 숨은 절반을 쥐고 있는 레이어.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">텍스트를 한 글자도 생성하지 않고 &#x27;예/아니오&#x27;만 답하는 결정 모델이 지난 2주 사이 세계 곳곳에서 거의 매일 신작을 내놓고 있다. Cloudflare의 Clef는 지연시간을 Jev의 절반 이하로 줄였고, Microsoft는 83.5% 정확도·85ms라는 숫자로 바로 맞받았다. 이 와중에 한국 오픈소스 nari-decision-4b v2는 9B급 해외 모델보다 작으면서도 자체 평가 80.2%로 앞섰다고 주장한다. 재미있는 건 이 대결이 라우팅·가드레일·PII탐지 같은 지루한 인프라 용도로 쓰이는데도, 개발자들은 굳이 이 모델들을 팩맨 유령으로 붙여 승부를 보고 있다는 점 — 국내에서도 카페24가 220여 개 모델을 묶은 LLM 라우터에 라우팅 인프라를 실제로 연동하며 &#x27;지루한 결정&#x27;의 경제적 가치를 증명하는 중이다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=34621" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Cloudflare, 의사결정 모델 Clef와 RL 미세조정 서비스 공개</b><span>Cloudflare 43개 평가 기준 지연시간 중앙값: Clef 209.3ms, Clef-flash 38.8ms (Jev 524.1ms보다 짧음). Qwen 기반, Trust &amp; Safety 신고 평가·지원 분류·봇 판별 특화 수요. Apache-2.0 공개.</span></a><small class="rdate">2026-10-02</small></li><li><span class="t">R02</span><a class="rlink" href="https://news.hada.io/topic?id=35100" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Microsoft-Decision-1 - 선택지별 확률을 반환하는 저비용 의사결정 모델</b><span>정확도·지연시간: Microsoft-Decision-1 83.5%/85ms, Jev 1.13.0 82.3%/240ms, GPT-6 Luna Decisions 79.4%/300ms. &#x27;최근 2주 사이 의사결정 모델이 쏟아지는 유행&#x27;이라는 HN 댓글도 함께 소개.</span></a><small class="rdate">2026-10월</small></li><li><span class="t">R03</span><a class="rlink" href="https://opper.ai/jevman-benchmark/" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Show HN: Jevman – AI decision models play Pac-Man</b><span>jev 1.13, kev, clef, clef-flash, GPT-6 Luna, Laya를 팩맨 봇 유령으로 100게임씩 대결시킨 벤치마크 — 81포인트·댓글 23개로 HN에서도 큰 화제.</span></a><small class="rdate">2026-10-08</small></li><li><span class="t">R04</span><a class="rlink" href="https://news.ycombinator.com/item?id=50072702" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Ask HN: Anyone using Jev / other decision models? What for?</b><span>결정모델/System One 패턴이 &#x27;Jev가 한 달 전 개척, 이후 OpenAI 버전 출시 + 수십 개 오픈웨이트 구현&#x27;으로 번졌다는 정리 — 실제 프로덕션 사용 사례를 묻는 스레드.</span></a><small class="rdate">2026-10-13</small></li><li><span class="t">R05</span><a class="rlink" href="https://magazine.hankyung.com/business/article/202609078258b" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>카페24, &#x27;LLM 라우터&#x27;에 텐센트 &#x27;토큰허브&#x27; 연동…AI 인프라 선택 폭 확대</b><span>국내 이커머스 플랫폼 카페24가 220여 개 AI 모델을 하나의 API로 묶는 &#x27;LLM 라우터&#x27;에 텐센트 토큰허브를 연동 — 오토 라우터가 코딩/추론/번역/창작 요청을 자동 분류해 모델을 배분, 장애 시 자동 전환까지 지원.</span></a><small class="rdate">2026-09-07</small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">nari-decision-4b v2 공개 (blackmallangcow)</div><div class="ref-hook">33ms, 한국어 결정모델 자체 평가 80.2% — 9B급 해외 모델(JEV, clef-flash)보다 작은데 더 정확했다.</div><div class="ref-links"><a href="https://www.threads.com/@blackmallangcow.c/post/DehM2cPCUK1" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-16%20nari-decision-4b%20v2%20%EA%B3%B5%EA%B0%9C%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">Vela 2.0 — Open Foundation Routing Models (vLLM Semantic Router)</div><div class="ref-hook">vLLM 팀이 내놓은 라우팅 모델 패밀리, 할루시네이션·PII를 문자 단위로 콕 집어낸다 — 0.3B부터 9B까지 4종.</div><div class="ref-links"><a href="https://huggingface.co/collections/vllm-sr/vela-20" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-08%20Vela%202.0%20%EC%98%A4%ED%94%88%20%EB%9D%BC%EC%9A%B0%ED%8C%85%20%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-kakao-side-door" class="section">
+    <div class="grid section-head"><span class="section-index">02</span><h2 class="section-title">읽지 않을 권리 없는 카톡 — 새벽 2시 &#x27;뒷문&#x27; 자동화 도구들</h2><p class="section-meta">카카오톡이 공식 백업을 20MB로 묶어두는 사이, 개발자들은 로컬 CLI로 대화방 90개를 매일 새벽 자동 수집하거나 채팅+까지 통합하는 비공식 도구를 오픈소스로 풀고 있다 — 편리함과 계정 정지 리스크 사이 줄타기.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">카카오톡 공식 무료 백업이 20MB 남짓에 묶여있다는 지적이 끊이지 않는 사이, 개발자들은 로컬에서 돌아가는 비공식 자동화 도구로 그 틈을 메우고 있다 — 매일 새벽 대화방 90개를 혼자 정리하는 read-only CLI부터, 카카오톡·채팅+·텔레그램·디스코드·슬랙을 한 번에 묶는 4종 세트까지. 다만 이 영역은 GeekNews/Hacker News 양쪽 모두에서 관련 보도를 찾지 못했다 — 한국 메신저 특유의 로컬 스크랩/비공식 API 문화가 아직 영미권 기술 커뮤니티 레이더에는 거의 잡히지 않는다는 뜻이기도 하다. 그 사이 카카오는 &#x27;개인정보 강제수집&#x27; 논란, 삼성과의 백업 기능 협업 등 공식 경로 개선에 더디게 움직이고 있다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://m.ekn.kr/view.php?key=20260223025251140" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>스마트폰 새로 샀는데, 카톡 대화 백업용량은 20MB?</b><span>카카오톡 무료 대화 백업 용량이 약 20MB에 불과하다는 지적 — 텔레그램은 서버 기반 무제한 동기화, 라인·왓츠앱은 구글드라이브/아이클라우드(15GB/5GB) 활용하는데 카카오는 자체 폐쇄 시스템 고수. 유료 &#x27;톡클라우드&#x27;(월 2,100~5,100원) 가입 유도 논란도 제기됨.</span></a><small class="rdate">2026-02-23</small></li><li><span class="t">R02</span><a class="rlink" href="https://www.khan.co.kr/article/202512212043005" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>개인정보 안 줄 거면 나가라…카카오, 사실상 &#x27;강제수집&#x27; 논란</b><span>카카오가 이용 기록·패턴 수집 동의를 2026-02-04 약관 개정에 포함, 거부 시 서비스 이용 자체를 제한 — 비공식 백업/CLI 도구가 등장하는 배경인 &#x27;공식 경로에 대한 불신&#x27;을 뒷받침.</span></a><small class="rdate">2025-12-21</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.samsung.com/kr/인터뷰-카톡-데이터-쉽고-빠르게-옮겨요-사용자-편의-위해-뭉친-삼성전자x카카오-협업-스토리" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>[인터뷰] &quot;카톡 데이터 쉽고 빠르게 옮겨요&quot; 삼성전자X카카오 협업 스토리</b><span>공식 채널에서도 오픈채팅 복원·읽지않음 상태 복원을 지원하도록 스마트스위치를 개선 — 공식 경로가 느리게 따라가는 사이 비공식 자동화 도구가 먼저 자리잡은 대비.</span></a><small class="rdate">미기재 (삼성뉴스룸 최근 업데이트)</small></li></ul><p class="research-note">ℹ️ GeekNews·Hacker News 양쪽 모두 &#x27;kakao-auto&#x27;, &#x27;nichirin&#x27;, 카카오톡 자동화/CLI 관련 글을 찾지 못함(검색 결과 0건) — 억지로 끼워맞추지 않고 정직하게 &#x27;없음&#x27;으로 표시. 이 토픽은 한국 경제뉴스 소스만으로 리서치를 구성.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">새벽 2시, 아무도 없는 사무실에서 화면 깨진 노트북 한 대가 카톡 대화방 90개를 정리합니다</div><div class="ref-hook">새벽 2시, 사람 없는 사무실에서 카톡 90개방을 혼자 정리하는 읽기전용·완전 로컬 자동화 도구.</div><div class="ref-links"><a href="https://github.com/AidanKR/kakao-auto" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-03%20%EC%B9%B4%EC%B9%B4%EC%98%A4%ED%86%A1%20%EC%9E%90%EB%8F%99%20%EC%88%98%EC%A7%91%C2%B7%EB%B0%B1%EC%97%85%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%28kakao-auto%29%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">nichirin(日輪)과 chatplus-core 오픈소스 공개</div><div class="ref-hook">카카오톡·채팅+·텔레그램·디스코드·슬랙까지 한 번에 — CLI+웹 클라이언트 4종 세트가 통째로 오픈소스 공개.</div><div class="ref-links"><a href="https://www.threads.com/@croissmouse/post/DeatoVakn4L" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-14%20nichirin-chatplus-core%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%20%EA%B3%B5%EA%B0%9C%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-voice-clean-clone" class="section">
+    <div class="grid section-head"><span class="section-index">03</span><h2 class="section-title">목소리는 복제하기 쉬워지고, 잡음은 지우기 쉬워진다</h2><p class="section-meta">빌리빌리의 5개 국어 제로샷 음성복제 IndexTTS-2.5에 이어, Krisp이 콜센터 음성에서 화자 중첩 오류율을 69.57%→2.97%로 낮춘 벤치마크를 공개했다 — 복제와 정화, 음성 AI 스택의 양 끝단이 같은 주에 업데이트됐다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">빌리빌리의 IndexTTS-2.5는 참고 음성 한 개만 있으면 5개 언어로 그 목소리를 복제하고, Krisp은 같은 주에 반대 방향 기술을 공개했다 — 콜센터처럼 시끄러운 환경에서 화자 중첩 음성의 단어 오류율을 69.57%에서 2.97%로 낮추는 음성 분리 벤치마크다. 복제와 정화는 같은 음성 AI 스택의 양 끝단이면서, 한쪽은 &#x27;누군가의 목소리로 아무 말이나 만든다&#x27;는 위험을, 다른 쪽은 &#x27;어떤 소음 속에서도 진짜 목소리를 정확히 가려낸다&#x27;는 안전을 대표한다. 국내에서도 GIST·한화비전이 소음 속 소리 분류 세계 1위를 차지했고, 금융권 콜센터는 AI 음성봇 고도화로 이미 인력을 줄이고 있다 — 복제·분리 두 기술 모두 &#x27;목소리의 가치가 재편되는 중&#x27;이라는 같은 이야기를 하고 있다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=33349" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>VoiceStudio - 음성 복제, 더빙, 받아쓰기를 로컬에서 처리하는 오픈소스 스튜디오</b><span>계정·API키·구독 없이 로컬에서 음성 복제/더빙/받아쓰기를 처리하는 오프라인 데스크톱 앱 — IndexTTS-2.5와 같은 &#x27;완전 로컬 음성복제&#x27; 흐름을 보여주는 동류 오픈소스.</span></a><small class="rdate">2026년</small></li><li><span class="t">R02</span><a class="rlink" href="https://news.hada.io/topic?id=31283" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>tts-bench - 로컬에서 TTS 모델 비교를 위한 벤치마크</b><span>로컬 TTS 모델 55종을 Speed/Listen/Scores 3개 렌즈로 비교하는 오픈소스 벤치마크 — 신규 음성복제 모델들의 상대적 위치를 가늠할 참고 자료.</span></a><small class="rdate">2026년</small></li><li><span class="t">R03</span><a class="rlink" href="https://krisp.ai/blog/voice-isolation-benchmark/" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Show HN: Open benchmark for STT when a second person is talking (265 recordings)</b><span>Krisp이 콜센터·오픈오피스·이동 중 전화 등 270개 실제 녹음으로 11개 STT 설정(Voice Isolation 적용 전/후)을 벤치마크 공개 — 코퍼스의 Krisp 기사와 동일 소스, HN Show HN으로 직접 공개.</span></a><small class="rdate">2026-09-23</small></li><li><span class="t">R04</span><a class="rlink" href="https://www.mk.co.kr/news/it/12098472" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>AI, 사람 귀에 가깝게 진화중...잡음 속에서도 소리 정확하게 구분</b><span>GIST·한화비전 공동연구팀이 국제 음향AI 경진대회(DCASE 2026)에서 세계 1위 — 새 소음 환경에서도 소리를 정확히 구분하는 &#x27;연속 학습&#x27; 기술, 평균 정확도 79.62%.</span></a><small class="rdate">2026-07-14</small></li><li><span class="t">R05</span><a class="rlink" href="https://v.daum.net/v/5vunHEb0YI" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>보험·카드사에 AI 속속…콜센터 &#x27;울상&#x27;</b><span>현대해상 &#x27;하이봇&#x27; 고도화로 아웃바운드 상담 인력 40명→20명 반토막, KB국민카드도 AI 도입 후 인원 조정 검토 — 음성AI 고도화가 실제 고용에 미치는 영향을 보여주는 국내 사례.</span></a><small class="rdate">2026-04-22</small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">빌리빌리(Bilibili) IndexTTS-2.5 — 오픈소스 목소리 복제 AI</div><div class="ref-hook">참고 음성 하나로 중국어·영어·일본어·스페인어·아랍어까지 — 학습 없이 바로 쓰는 제로샷 음성복제.</div><div class="ref-links"><a href="https://github.com/index-tts/index-tts" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-09-22%20IndexTTS-2.5%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%20%EC%9D%8C%EC%84%B1%EB%B3%B5%EC%A0%9C%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">Krisp Voice Isolation — STT 정확도 벤치마크 공개</div><div class="ref-hook">주변 소음·다른 사람 목소리 섞여도 단어 오류율 69.57%→2.97% — 265개 실제 녹음으로 투명하게 검증.</div><div class="ref-links"><a href="https://www.threads.com/@feelfree_ai/post/Dejr3B1gVv-" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-17%20Krisp%20Voice%20Isolation%20STT%20%EB%B2%A4%EC%B9%98%EB%A7%88%ED%81%AC%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+
+  <footer class="foot"><span>2026-10-18</span><span>Automatically generated · Threads Weekly (Sample Issue)</span></footer>
+</div>
+<script>
+(function () {
+  var KEY = 'threads-weekly-theme';
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-switch button');
+  function apply(mode) {
+    if (mode === 'light' || mode === 'dark') { root.setAttribute('data-theme', mode); }
+    else { root.removeAttribute('data-theme'); mode = 'system'; }
+    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.themeChoice === mode); });
+  }
+  var saved = localStorage.getItem(KEY) || 'system';
+  apply(saved);
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.dataset.themeChoice;
+      localStorage.setItem(KEY, mode);
+      apply(mode);
+    });
+  });
+})();
+</script>
+</body>
+</html>
