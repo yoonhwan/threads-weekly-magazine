@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>스레드 위클리</title>
+  <style>
+    :root {
+      --red: #e30613;
+      --ink: #111;
+      --paper: #fff;
+      --soft: #f2f2f2;
+      --muted: #686868;
+      --line: #c8c8c8;
+      --font: "Helvetica Neue", "Akzidenz-Grotesk", Inter, Arial, "Apple SD Gothic Neo", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    }
+    :root[data-theme="light"] { --ink:#111; --paper:#fff; --soft:#f2f2f2; --muted:#686868; --line:#c8c8c8; }
+    :root[data-theme="dark"] { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; }
+    button { font:inherit; }
+    h1,h2,h3,p,figure,blockquote,ol,ul { margin:0; }
+    ol,ul { padding:0; }
+    .page { width:min(100% - 40px, 1280px); margin:0 auto; padding:28px 0 64px; }
+    .grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; }
+    .kicker { color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .rule { border-top:1px solid var(--ink); }
+
+    .mast { border-top:8px solid var(--red); padding-top:18px; }
+    .brand { grid-column:1 / span 5; font-size:clamp(1.1rem,2vw,1.65rem); font-weight:900; letter-spacing:-.04em; line-height:1; }
+    .issue { grid-column:9 / -1; text-align:right; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .hero { margin-top:72px; align-items:end; }
+    .hero-date { grid-column:1 / span 8; font-size:clamp(2.4rem,7vw,6.4rem); font-weight:900; letter-spacing:-.06em; line-height:.9; word-break:keep-all; }
+    .hero-note { grid-column:10 / -1; padding-top:12px; border-top:1px solid var(--ink); font-size:.82rem; font-weight:700; }
+    .hero-note span { display:block; margin-top:8px; color:var(--muted); font-weight:500; }
+
+    .metrics { margin-top:64px; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+    .metric { grid-column:span 3; min-height:145px; padding:16px 12px 18px 0; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; }
+    .metric:last-child { border-right:0; }
+    .metric strong { font-size:clamp(2.2rem,4.6vw,4.6rem); font-weight:900; letter-spacing:-.06em; line-height:.9; font-variant-numeric:tabular-nums; }
+    .metric span { max-width:10rem; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .metric em { color:var(--red); font-style:normal; }
+
+    .jump { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 20px; }
+    .jump a { text-decoration:none; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .jump a::before { content:"↘ "; color:var(--red); }
+
+    .theme-switch { margin-top:16px; display:flex; gap:6px; }
+    .theme-switch button { border:1px solid var(--line); background:transparent; color:var(--muted); padding:5px 11px; font-size:.68rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; }
+    .theme-switch button.on { border-color:var(--red); color:var(--red); }
+
+    .section { margin-top:120px; }
+    .section-head { align-items:end; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+    .section-index { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; }
+    .section-title { grid-column:2 / span 7; font-size:clamp(1.6rem,3vw,3.1rem); font-weight:900; letter-spacing:-.05em; line-height:1.05; }
+    .section-meta { grid-column:10 / -1; text-align:right; color:var(--muted); font-size:.76rem; font-weight:700; line-height:1.4; }
+
+    /* v2: 멤버 기사는 짧은 레퍼런스 줄(후크 한 줄 + 링크)로만 표시 — 본문 덤프 없음 */
+    .refs { margin-top:10px; }
+    .refs-head { font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .ref-row { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:baseline; padding:10px 0; border-bottom:1px solid var(--line); font-size:.85rem; }
+    .ref-row:last-child { border-bottom:0; }
+    .ref-row .no { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ref-row .ref-body { grid-column:2 / span 9; min-width:0; }
+    .ref-row .ref-title { font-weight:700; letter-spacing:-.01em; }
+    .ref-row .ref-hook { color:var(--muted); margin-top:2px; }
+    .ref-row .ref-links { margin-top:4px; font-size:.76rem; font-weight:700; }
+    .ref-row .ref-links a { color:var(--red); text-decoration:none; border-bottom:1px solid var(--red); margin-right:14px; }
+
+    .research { margin-top:26px; padding:24px 0 10px; background:var(--soft); }
+    .research-inner { padding:24px 28px; }
+    .research-head { font-size:.82rem; font-weight:900; letter-spacing:.04em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .research-head .dot { color:var(--red); }
+    .research-narrative { font-size:1.02rem; line-height:1.85; color:var(--ink); max-width:72ch; margin-bottom:22px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+    .links { list-style:none; }
+    .links li { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:start; padding:13px 0; border-bottom:1px solid var(--line); }
+    .links li:last-child { border-bottom: 0; }
+    .links li > .t { grid-column:1 / span 2; color:var(--red); font-size:.68rem; font-weight:900; letter-spacing:.04em; }
+    .links a.rlink { grid-column:3 / span 7; min-width:0; display:flex; flex-direction:column; text-decoration:none; }
+    .links a.rlink b { font-size:.92rem; line-height:1.35; }
+    .links a.rlink span { margin-top:3px; color:var(--muted); font-size:.78rem; line-height:1.5; }
+    .links li > small.rdate { grid-column:11 / -1; color:var(--muted); font-size:.72rem; text-align:right; }
+    .research-empty { padding:16px 0; color:var(--muted); font-size:.85rem; }
+    .research-note { margin-top:16px; padding:12px 14px; background:#fff; border-left:3px solid var(--red); color:var(--muted); font-size:.78rem; line-height:1.6; }
+    .links a.rlink .src-tag { order:-1; align-self:flex-start; margin-bottom:5px; display:inline-block; font-size:.62rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; }
+    .links a.rlink .src-tag-web { color:var(--muted); }
+    .links a.rlink .src-tag-newshada { color:var(--red); border-color:var(--red); }
+    .links a.rlink .src-tag-hackernews { color:#ff6600; border-color:#ff6600; }
+    .links a.rlink .src-tag-korean_economic_news { color:#0a5c36; border-color:#0a5c36; }
+
+    .foot { margin-top:70px; padding-top:12px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+
+    @media (max-width: 760px) {
+      .page { width:min(100% - 28px, 680px); padding-top:18px; }
+      .grid { column-gap:10px; }
+      .brand { grid-column:1 / span 7; }
+      .issue { grid-column:9 / -1; }
+      .hero { margin-top:50px; }
+      .hero-date { grid-column:1 / -1; font-size:clamp(2.6rem,13vw,4.4rem); line-height:.95; }
+      .hero-note { grid-column:7 / -1; margin-top:34px; }
+      .metrics { margin-top:42px; }
+      .metric { grid-column:span 6; min-height:112px; padding:13px 8px 13px 0; border-bottom:1px solid var(--line); }
+      .metric:nth-child(even) { border-right:0; padding-left:10px; }
+      .metric strong { font-size:2.3rem; }
+      .jump { gap:8px 14px; }
+      .section { margin-top:78px; }
+      .section-index { grid-column:1 / span 2; }
+      .section-title { grid-column:3 / -1; font-size:1.9rem; }
+      .section-meta { grid-column:3 / -1; margin-top:14px; justify-self:start; text-align:left; }
+      .ref-row { grid-template-columns:28px 1fr; gap:4px 12px; }
+      .ref-row .no,.ref-row .ref-body { grid-column:auto; }
+      .links li { grid-template-columns:72px 1fr; gap:8px 12px; }
+      .links li > .t,.links a.rlink,.links li > small.rdate { grid-column:auto; }
+      .links a.rlink { grid-column:2; }
+      .links li > small.rdate { grid-column:2; text-align:left; }
+      .research-narrative { max-width:none; }
+      .research-inner { padding:18px 14px; }
+      .foot { flex-direction:column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html{scroll-behavior:auto} }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <div class="grid"><div class="brand">스레드<br>위클리</div><div class="issue">Scrap &amp; Research Digest<br>Threads Weekly</div></div>
+    <div class="grid hero"><h1 class="hero-date">2026.10.25</h1><p class="hero-note">Sample Issue v2<span>큐레이션·에디토리얼 리서치</span></p></div>
+  </header>
+
+  <section class="grid metrics" aria-label="이번 호 통계">
+    <div class="metric"><strong>3</strong><span>다룬 토픽 수</span></div>
+    <div class="metric"><strong>15</strong><span>리서치 소스 수</span></div>
+    <div class="metric"><strong>58</strong><span>기간<em>(일)</em></span></div>
+    <div class="metric"><strong>7</strong><span>참고 원문<em>(각주)</em></span></div>
+  </section>
+  <nav class="jump" aria-label="바로가기"><a href="#topic-engine-beats-model">이제 모델 말고 &#x27;엔진&#x27; </a><a href="#topic-ai-box-at-home">집에도, 동네 병원에도 &#x27;</a><a href="#topic-play-beats-prep">&#x27;일찍, 비싸게&#x27;보다 &#x27;같</a></nav>
+  <div class="theme-switch" role="group" aria-label="테마 선택">
+    <button type="button" data-theme-choice="system">시스템</button>
+    <button type="button" data-theme-choice="light">라이트</button>
+    <button type="button" data-theme-choice="dark">다크</button>
+  </div>
+
+  <section id="topic-engine-beats-model" class="section">
+    <div class="grid section-head"><span class="section-index">01</span><h2 class="section-title">이제 모델 말고 &#x27;엔진&#x27; 전쟁 — 딥시크가 서비스 엔진을 통째로 풀었다</h2><p class="section-meta">DeepSeek이 실서비스용 추론 프레임워크 DeepInfer를 오픈소스로 공개하자 HN이 2,346포인트로 들끓었고, 같은 주 소비자 PC 쪽에서는 125B 모델을 12GB GPU로 돌리는 Strata가 화제다 — 같은 모델도 어떤 엔진에 올리느냐에 따라 비용이 갈리는 시대.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">딥시크가 10월 20일 자사 서비스 엔진 DeepInfer를 Apache 2.0으로 풀자 Hacker News에서 2,346포인트·댓글 891개로 그 주 최대 화제가 됐다. 지원 모델은 DeepSeek-V4.1-Flash 하나, 하드웨어는 엔비디아 SM100과 화웨이 어센드 950 둘 다다. 딥시크는 단일 클러스터가 하루 155조 토큰을 처리한다고 밝혔지만 이는 자체 측정이고, 이데일리·AI타임스 모두 독립 검증은 아니라고 못박았다. 게다가 이번 공개는 오프라인 추론용이라 KV 캐시 시스템·프리필/디코드 분리·부하 분산은 빠져 있다(HN 댓글에서도 &#x27;KV 캐시 시스템이 빠졌다&#x27;는 지적이 나왔다). 숫자에도 대가가 있다: 배치를 4,096→65,536으로 16배 키우면 GPU당 처리량은 6만→8만 9천 토큰/초(약 +48%)지만 지연은 70ms→730ms로 10배 넘게 늘어난다. 반대편 책상 위에서는 Strata가 125B MoE(Qwen3.8-Flash-Next)를 RTX 5070 12GB + RAM 64GB에서 초당 94토큰으로 돌린다고 한다(GeekNews 요약 기준 자체 측정). 스크랩에는 &#x27;HN 1면 제목의 100T/s는 실측이 아니라 추정치&#x27;라는 정정 댓글이 달려 있는데, 그 HN 1면 글 자체는 이번 검색에서 확인하지 못했다. 같은 모델이라도 엔진이 비용을 가른다는 한 문장이 128장짜리 클러스터와 낡은 Tesla P40 두 장에서 동시에 확인되는 한 주.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=35703" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>DeepSeek, 추론 엔진을 오픈소스로 공개</b><span>DeepInfer는 대규모 프로덕션 서비스를 구동하는 고성능 추론 프레임워크이며 이번 릴리스는 오프라인 추론 범위. 지원 모델 DeepSeek-V4.1-Flash. 완전한 서비스에는 KV 캐시·VE/Prefill/Decode 분리·부하 분산을 별도로 갖춰야 함(검색 결과 요약 기준).</span></a><small class="rdate">2026-10월</small></li><li><span class="t">R02</span><a class="rlink" href="https://news.hada.io/topic?id=34761" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Strata - Qwen 3.8 Flash Next(125B)를 일반 PC에서 초당 100토큰으로 실행하기</b><span>24,576개 전문가 중 토큰당 10개만 사용하는 구조를 활용해 GPU·CPU·RAM에 분산. 자체 측정: RTX 5070 12GB·Ryzen 5 7600·RAM 64GB에서 Q2_0 답변 94 tok/s(4K 답변·32K 입력 기준). 최소 VRAM 12GB·RAM 32GB, MIT 라이선스.</span></a><small class="rdate"></small></li><li><span class="t">R03</span><a class="rlink" href="https://news.ycombinator.com/item?id=50163277" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>DeepInfer: High-performance inference framework for DeepSeek models</b><span>2,346포인트·댓글 891개. 상위 댓글은 &#x27;하루 155조 토큰, 카드당 시간당 $38 매출&#x27;이라는 자체 수치에 놀라면서도 &#x27;KV 캐시 시스템이 빠졌다&#x27;고 지적.</span></a><small class="rdate">2026-10-20</small></li><li><span class="t">R04</span><a class="rlink" href="https://news.ycombinator.com/item?id=49448210" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Qwen3.8-Flash-Next</b><span>Strata가 올려 쓰는 125B MoE 모델의 공개 글 — 704포인트·댓글 233개. 같은 모델을 48GB Mac에서 12 tok/s로 돌리는 Show HN(240포인트)이 뒤따랐다.</span></a><small class="rdate">2026-08-26</small></li><li><span class="t">R05</span><a class="rlink" href="https://news.ycombinator.com/item?id=49879253" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Strata: Qwen3.8-Flash-Next (125B Moe) on a 8GB+ Nvidia GPU</b><span>Strata 원글 제출 — 5포인트·댓글 0개로 HN 반응은 미미했다.</span></a><small class="rdate">2026-09-28</small></li><li><span class="t">R06</span><a class="rlink" href="https://www.edaily.co.kr/News/Read?mediaCodeNo=257&amp;newsId=02315686645615544" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>중국산 칩도 가능...딥시크, 엔비디아·화웨이 칩 지원하는 AI 추론 기술 공개</b><span>프리필 테스트는 SM100 4개, 디코딩은 64개로 측정. 배치 4,096→65,536에서 GPU당 처리량 6만→8만 9천(약 +48%), 지연 70ms→730ms. &#x27;다른 프레임워크와 동일 조건 비교가 아니므로 실제 비용 절감은 검증 필요&#x27;.</span></a><small class="rdate">2026-10-22</small></li><li><span class="t">R07</span><a class="rlink" href="https://www.g-enews.com/article/Global-Biz/2026/10/2026102208410575130c8c1c064d_1" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>中 딥시크, 초고효율 추론 엔진 &#x27;딥인퍼&#x27; 전격 오픈소스화</b><span>SCMP 인용 보도. 엔비디아 블랙웰·화웨이 어센드 950 동시 지원을 &#x27;미국 하드웨어 제재와 폐쇄형 소프트웨어 독점에 대한 무상 개방 전략&#x27;으로 해석 — 해석 기사이므로 수치는 이데일리 쪽을 기준으로 삼았다.</span></a><small class="rdate">2026-10-22</small></li></ul><p class="research-note">ℹ️ HN에서 Strata 원글(49879253)은 5포인트·댓글 0개로 반응이 거의 없었다. 스크랩이 언급한 &#x27;HN 1면 100T/s&#x27; 글은 찾지 못해 소스로 넣지 않았다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">DeepSeek, 자체 추론 프레임워크 DeepInfer 오픈소스 공개</div><div class="ref-hook">딥시크가 V4.1-Flash를 실제 서비스하는 추론 프레임워크를 Apache 2.0으로 전면 공개 — 엔비디아 SM100과 화웨이 어센드 950을 둘 다 지원한다.</div><div class="ref-links"><a href="https://www.threads.com/@choi.openai/post/Dethioyj84X" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-20%20DeepSeek%20DeepInfer%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%20%EA%B3%B5%EA%B0%9C%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">Strata w/ Qwen3.8-Flash-Next — 소비자 GPU에서 125B MoE 로컬 구동</div><div class="ref-hook">Tesla P40 두 장 + DDR4 32GB로 125B MoE를 돌려본 후기 — 그리고 &#x27;HN 1면의 100T/s는 실측이 아니라 추정치&#x27;라는 정정 댓글까지.</div><div class="ref-links"><a href="https://github.com/Niko1221/Strata" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-13%20Strata%20Qwen3.8-Flash-Next%20%EB%A1%9C%EC%BB%AC%20LLM%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-ai-box-at-home" class="section">
+    <div class="grid section-head"><span class="section-index">02</span><h2 class="section-title">집에도, 동네 병원에도 &#x27;AI 서버 한 대&#x27; — 로컬 AI 컴퓨터 러시</h2><p class="section-meta">$1,799 Oki Home, M5 Ultra 맥 스튜디오, DGX Spark 12대로 병원을 돌리는 동네 치과 원장까지 — 그리고 엔비디아·MS는 RTX 스파크 노트북을 같은 주에 내놓았다. 클라우드 없이 AI를 &#x27;소유&#x27;하려는 움직임이 제품 카테고리가 됐다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">&#x27;AI 컴퓨터를 사서 집(또는 병원)에 둔다&#x27;가 한 주 사이 제품 카테고리처럼 굳어졌다. 엔비디아·MS는 10월 16일 RTX 스파크 노트북(2,599달러부터)을 내놨고 DGX Spark 64GB는 10월 23일 4,999달러부터 풀렸다. 맥 쪽에서는 M5 Ultra 맥 스튜디오 리뷰가 HN 269포인트를 받았는데, 눈에 띈 댓글은 Qwen3.8 27B 속도표였다 — 8K 프롬프트에서 RTX 5090 PC 59 tok/s, M5 Ultra 48 tok/s, 128K에서는 44 대 32. 5090이 더 빠르지만 32GB VRAM이 모델 크기를 막고, 맥은 큰 통합 메모리로 대형 모델 상시 구동에 강하다는 게 GeekNews 요약의 결론이다. 반면 AIGeek은 현실적 제동을 건다: 같은 GB10 장비가 3월 900만 원대에서 10월 1,700만 원대로 뛰었고, 직접 시험하니 26B 모델은 동시 32건을 처리하지만 4만 8천 토큰짜리 문서 하나가 83초 동안 다른 직원 질문을 전부 세웠다. 서울아산병원이 5월 폐쇄망 프라이빗 AI를 가동한 것과 동네 치과 원장의 DGX Spark 12대 이야기는 같은 이유 — 환자 정보가 밖으로 나가지 않는다 — 에서 출발한다. 그래서 결론은 &#x27;다 로컬로&#x27;가 아니라 기밀은 안에서, 일반 문의는 API로 섞어 쓰는 쪽.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=34079" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>M5 Ultra Mac Studio 리뷰: 로컬 AI 에이전트를 위한 꿈의 Mac</b><span>256GB M5 Ultra는 M3 Ultra 대비 응답 생성 평균 약 70%, 프롬프트 처리 약 150% 빠름. RTX 5090이 더 빠르지만 32GB VRAM이 모델 크기를 제한. &#x27;고가 장비와 직접 설정이 필요해 모두에게 유리하진 않다&#x27;.</span></a><small class="rdate"></small></li><li><span class="t">R02</span><a class="rlink" href="https://news.ycombinator.com/item?id=49787313" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>M5 Ultra Mac Studio Review</b><span>269포인트·댓글 262개. simonw 댓글의 Qwen3.8 27B 생성 속도(tok/s): 8K 프롬프트 RTX 5090 59 · M5 Ultra 48 · M3 Ultra 31, 128K에서는 44 · 32 · 20.</span></a><small class="rdate">2026-09-21</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.ycombinator.com/item?id=49508982" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Apple caught off guard by AI demand for Mac Mini and Mac Studio</b><span>501포인트·댓글 594개 — 로컬 AI 수요가 애플의 물량 예측을 넘어섰다는 MacRumors 보도에 대한 토론.</span></a><small class="rdate">2026-08-31</small></li><li><span class="t">R04</span><a class="rlink" href="https://www.hankyung.com/article/202610166871i" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>엔비디아, AI PC &#x27;RTX 스파크&#x27; 국내 출시…&quot;에이전트 AI 시대 가속화&quot;</b><span>클라우드 서버 없이 PC에서 AI 모델 구동, 외부 유출 금지 정보는 기기 내 AI로 처리. 최대 128GB 통합 메모리·1페타플롭스(FP4), 노트북 기준 2,599달러(약 347만 원)부터 — &#x27;비싼 가격이 허들&#x27;.</span></a><small class="rdate">2026-10-16</small></li><li><span class="t">R05</span><a class="rlink" href="https://www.aigeek.kr/insight/onprem-llm-vs-api-memory-price" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>중소기업 AI, 직접 구축할까 API 쓸까…시험 장비 900만→1,700만 원</b><span>필자 실측: GB10 장비 3월 900만 원대→10월 1,700만 원대, 26B 모델 동시 32건 처리하나 48,508토큰 문서 한 건에 83초간 정지. 직원 100명 기준 Sonnet 5.5 API 약 1,780만 원/년 vs Haiku 5.5 약 89만 원/년. 기밀은 자체 장비, 일반 문의는 API 혼합 권장.</span></a><small class="rdate">2026-10-16</small></li><li><span class="t">R06</span><a class="rlink" href="https://news.amc.seoul.kr/news/con/detail.do?cntId=11852&amp;pressChk=Y" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>서울아산병원, 폐쇄망 기반 &#x27;프라이빗 AI 지식 검색 시스템&#x27; 구축</b><span>국내 의료기관 최초로 외부 인터넷과 완전히 단절된 온프레미스 방식, 외부 클라우드 의존도 0%. 병원 IT 인력이 직접 개발. 병원 보도자료 원문이라 자체 홍보 성격임을 감안.</span></a><small class="rdate">2026-05-18</small></li></ul><p class="research-note">ℹ️ GeekNews·HN에서 Oki Home과 동네 치과 사례를 직접 다룬 글은 찾지 못했다(HN &#x27;Oki Home&#x27; 검색 결과는 무관한 과거 글뿐). 이 토픽의 GeekNews는 M5 Ultra 리뷰 1건만 붙였다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (3)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">Oki Home — 개인용 AI 컴퓨터 ($1,799)</div><div class="ref-hook">$1,799에 RTX 5060 Ti 16GB, Qwen 3.8 27B를 최대 106 tok/s — 단, 완전한 오프라인 기기는 아니라는 단서가 붙는다.</div><div class="ref-links"><a href="https://okihome.ai/" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-08%20Oki%20Home%20%EA%B0%9C%EC%9D%B8%EC%9A%A9%20AI%20%EC%BB%B4%ED%93%A8%ED%84%B0%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">M5 울트라 맥스튜디오 어따 쓰냐고? (dukku_ai)</div><div class="ref-hook">MiniMax H3 200GB + 음성 클론 TTS + Whisper 통화 전사를 맥 한 대에서 — &#x27;96GB면 충분, GB는 SSD지 상주램이 아니다&#x27;라는 답변이 실용 포인트.</div><div class="ref-links"><a href="https://www.threads.com/@dukku_ai/post/DeoLfgeEwCR" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-20%20M5%20%EC%9A%B8%ED%8A%B8%EB%9D%BC%20%EB%A7%A5%EC%8A%A4%ED%8A%9C%EB%94%94%EC%98%A4%20%EB%A1%9C%EC%BB%ACAI%20%ED%99%9C%EC%9A%A9%EA%B8%B0%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">03</span><div class="ref-body"><div class="ref-title">동네 치과의 AX전환기 - AI 로컬 홈랩 채널</div><div class="ref-hook">보험서류 904건·3,389쪽을 69분에 처리, 자동 확정률 77% — 코딩 비전공 원장의 온프레미스 병원 재건축기(조회수 28만).</div><div class="ref-links"><a href="https://arca.live/b/aihomelab/185810092" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-15%20%EB%8F%99%EB%84%A4%20%EC%B9%98%EA%B3%BC%EC%9D%98%20AX%EC%A0%84%ED%99%98%EA%B8%B0%20-%20AI%20%EB%A1%9C%EC%BB%AC%20%ED%99%88%EB%9E%A9%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-play-beats-prep" class="section">
+    <div class="grid section-head"><span class="section-index">03</span><h2 class="section-title">&#x27;일찍, 비싸게&#x27;보다 &#x27;같이, 놀면서&#x27; — 아빠 놀이와 영유아 사교육의 반전</h2><p class="section-meta">김붕년 교수는 &#x27;주 2회·1시간 이상 아빠와 노는 것&#x27;을 꼽았고, 정부 연구기관 분석은 영유아 사교육 경험이 초1 언어·문제해결력과 유의한 관련이 없다고 말한다 — 육아 투자의 우선순위가 뒤집히는 한 주.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">스크랩된 영상의 핵심 주장은 단순하다 — 김붕년 교수는 아빠가 &#x27;주 2회 이상, 회당 1시간 이상&#x27; 공부 아닌 순수 놀이를 해주는 것이 언어·논리·사회성·인지에 도움이 된다고 했고, 해외여행이나 이른 영어유치원 같은 &#x27;좋아 보이는 투자&#x27;는 임팩트가 크지 않다고 했다. 이 방향을 국책 연구가 뒷받침한다: 육아정책연구소 분석(한국경제 7월 28일 보도)에서 영유아기 사교육 경험은 초1 시점의 언어 발달·문제해결력·집행기능과 유의한 관련이 없었고, 오히려 학습 사교육 경험이 많을수록 자존감이 낮은 경향을 보였다. 그런데도 0세 때 사교육을 시작하는 비율은 2016년 11.9%에서 2024년 32.9%로 약 3배가 됐고, 반일제 이상 학원 월평균 비용은 145만 4천 원이다. 전문가들이 공통으로 꼽은 대안도 같다 — 실행기능은 문제집 반복이 아니라 관계적 상호작용·놀이·수면·낮은 스트레스에 더 강하게 좌우된다. 정부도 6월 영유아 사교육을 줄이고 놀이를 늘리는 인식 개선 캠페인을 시작했다. 다만 주의: 교수의 &#x27;아빠 놀이&#x27; 코호트 효과는 영상 속 소개이고, 이번 리서치에서 원 논문은 확인하지 못했다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://www.hankyung.com/article/202607280050i" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>영유아 사교육 빨라도…&quot;효과 없고 자존감만 저하&quot;</b><span>교육부·육아정책연구소 &#x27;육아정책포럼&#x27; 제88호. 0세 사교육 시작 비율 11.9%→32.9%(2016→2024), 반일제 이상 학원 월평균 145만 4천 원. 영유아기 사교육 경험은 초1 언어·문제해결력·집행기능과 유의한 관련 없음, 자존감은 오히려 낮은 경향.</span></a><small class="rdate">2026-07-28</small></li><li><span class="t">R02</span><a class="rlink" href="https://www.newspim.com/news/view/20260630000351" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>영유아 사교육 줄이고 놀이 늘린다...교육부, 인식 개선 캠페인 추진</b><span>교육부가 영유아기 과도한 사교육을 줄이고 놀이 중심 교육을 확산하기 위한 국민 참여 홍보 캠페인을 시작(검색 결과 요약만 확인, 본문 전체는 열람하지 못함).</span></a><small class="rdate">2026-06-30</small></li></ul><p class="research-note">ℹ️ GeekNews·Hacker News에서는 이 주제(아빠 놀이·영유아 사교육)의 최근 글을 찾지 못해 &#x27;없음&#x27;으로 둔다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">&quot;아빠와 매일 이걸 해요.&quot; 따뜻한데 지능까지 높은 아이들 특징 | 지식인초대석 EP.166 (김붕년 교수 1부)</div><div class="ref-hook">아빠 놀이는 &#x27;과제를 던지고 경쟁하는&#x27; 방식이라 논리력·사회성·인지에 엄마 놀이와 다른 방향으로 기여한다 — 주 2회 × 1시간 이상 기준.</div><div class="ref-links"><a href="https://www.youtube.com/watch?v=n4zC7bAvo8Y" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-22%20%EC%95%84%EB%B9%A0%EB%86%80%EC%9D%B4-%EC%95%84%EC%9D%B4%EB%B0%9C%EB%8B%AC-%EA%B9%80%EB%B6%95%EB%85%84%EA%B5%90%EC%88%98%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">지능 높은 아이들이 어릴 때 공통적으로 해본 &#x27;1가지&#x27; ㅣ 지식인초대석: 합석 EP.18 (최민준 X 원민우)</div><div class="ref-hook">&#x27;감정은 인정하고 행동만 교정한다&#x27; — 감정 코칭 3단계와 &#x27;엄마 미워 = 더 놀고 싶다&#x27;는 번역법.</div><div class="ref-links"><a href="https://youtu.be/0h4cDajEp8I" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-13%20%EC%A7%80%EB%8A%A5%20%EB%86%92%EC%9D%80%20%EC%95%84%EC%9D%B4%EB%93%A4%EC%9D%98%20%EA%B3%B5%ED%86%B5%EC%A0%90-%EC%B5%9C%EB%AF%BC%EC%A4%80%20%EC%9B%90%EB%AF%BC%EC%9A%B0%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+
+  <footer class="foot"><span>2026-10-25</span><span>Automatically generated · Threads Weekly (Sample Issue)</span></footer>
+</div>
+<script>
+(function () {
+  var KEY = 'threads-weekly-theme';
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-switch button');
+  function apply(mode) {
+    if (mode === 'light' || mode === 'dark') { root.setAttribute('data-theme', mode); }
+    else { root.removeAttribute('data-theme'); mode = 'system'; }
+    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.themeChoice === mode); });
+  }
+  var saved = localStorage.getItem(KEY) || 'system';
+  apply(saved);
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.dataset.themeChoice;
+      localStorage.setItem(KEY, mode);
+      apply(mode);
+    });
+  });
+})();
+</script>
+</body>
+</html>
