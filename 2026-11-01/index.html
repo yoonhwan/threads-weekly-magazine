@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>스레드 위클리</title>
+  <style>
+    :root {
+      --red: #e30613;
+      --ink: #111;
+      --paper: #fff;
+      --soft: #f2f2f2;
+      --muted: #686868;
+      --line: #c8c8c8;
+      --font: "Helvetica Neue", "Akzidenz-Grotesk", Inter, Arial, "Apple SD Gothic Neo", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    }
+    :root[data-theme="light"] { --ink:#111; --paper:#fff; --soft:#f2f2f2; --muted:#686868; --line:#c8c8c8; }
+    :root[data-theme="dark"] { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; }
+    button { font:inherit; }
+    h1,h2,h3,p,figure,blockquote,ol,ul { margin:0; }
+    ol,ul { padding:0; }
+    .page { width:min(100% - 40px, 1280px); margin:0 auto; padding:28px 0 64px; }
+    .grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; }
+    .kicker { color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .rule { border-top:1px solid var(--ink); }
+
+    .mast { border-top:8px solid var(--red); padding-top:18px; }
+    .brand { grid-column:1 / span 5; font-size:clamp(1.1rem,2vw,1.65rem); font-weight:900; letter-spacing:-.04em; line-height:1; }
+    .issue { grid-column:9 / -1; text-align:right; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .hero { margin-top:72px; align-items:end; }
+    .hero-date { grid-column:1 / span 8; font-size:clamp(2.4rem,7vw,6.4rem); font-weight:900; letter-spacing:-.06em; line-height:.9; word-break:keep-all; }
+    .hero-note { grid-column:10 / -1; padding-top:12px; border-top:1px solid var(--ink); font-size:.82rem; font-weight:700; }
+    .hero-note span { display:block; margin-top:8px; color:var(--muted); font-weight:500; }
+
+    .metrics { margin-top:64px; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+    .metric { grid-column:span 3; min-height:145px; padding:16px 12px 18px 0; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; }
+    .metric:last-child { border-right:0; }
+    .metric strong { font-size:clamp(2.2rem,4.6vw,4.6rem); font-weight:900; letter-spacing:-.06em; line-height:.9; font-variant-numeric:tabular-nums; }
+    .metric span { max-width:10rem; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .metric em { color:var(--red); font-style:normal; }
+
+    .jump { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 20px; }
+    .jump a { text-decoration:none; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .jump a::before { content:"↘ "; color:var(--red); }
+
+    .theme-switch { margin-top:16px; display:flex; gap:6px; }
+    .theme-switch button { border:1px solid var(--line); background:transparent; color:var(--muted); padding:5px 11px; font-size:.68rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; }
+    .theme-switch button.on { border-color:var(--red); color:var(--red); }
+
+    .section { margin-top:120px; }
+    .section-head { align-items:end; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+    .section-index { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; }
+    .section-title { grid-column:2 / span 7; font-size:clamp(1.6rem,3vw,3.1rem); font-weight:900; letter-spacing:-.05em; line-height:1.05; }
+    .section-meta { grid-column:10 / -1; text-align:right; color:var(--muted); font-size:.76rem; font-weight:700; line-height:1.4; }
+
+    /* v2: 멤버 기사는 짧은 레퍼런스 줄(후크 한 줄 + 링크)로만 표시 — 본문 덤프 없음 */
+    .refs { margin-top:10px; }
+    .refs-head { font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .ref-row { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:baseline; padding:10px 0; border-bottom:1px solid var(--line); font-size:.85rem; }
+    .ref-row:last-child { border-bottom:0; }
+    .ref-row .no { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ref-row .ref-body { grid-column:2 / span 9; min-width:0; }
+    .ref-row .ref-title { font-weight:700; letter-spacing:-.01em; }
+    .ref-row .ref-hook { color:var(--muted); margin-top:2px; }
+    .ref-row .ref-links { margin-top:4px; font-size:.76rem; font-weight:700; }
+    .ref-row .ref-links a { color:var(--red); text-decoration:none; border-bottom:1px solid var(--red); margin-right:14px; }
+
+    .research { margin-top:26px; padding:24px 0 10px; background:var(--soft); }
+    .research-inner { padding:24px 28px; }
+    .research-head { font-size:.82rem; font-weight:900; letter-spacing:.04em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .research-head .dot { color:var(--red); }
+    .research-narrative { font-size:1.02rem; line-height:1.85; color:var(--ink); max-width:72ch; margin-bottom:22px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+    .links { list-style:none; }
+    .links li { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:start; padding:13px 0; border-bottom:1px solid var(--line); }
+    .links li:last-child { border-bottom: 0; }
+    .links li > .t { grid-column:1 / span 2; color:var(--red); font-size:.68rem; font-weight:900; letter-spacing:.04em; }
+    .links a.rlink { grid-column:3 / span 7; min-width:0; display:flex; flex-direction:column; text-decoration:none; }
+    .links a.rlink b { font-size:.92rem; line-height:1.35; }
+    .links a.rlink span { margin-top:3px; color:var(--muted); font-size:.78rem; line-height:1.5; }
+    .links li > small.rdate { grid-column:11 / -1; color:var(--muted); font-size:.72rem; text-align:right; }
+    .research-empty { padding:16px 0; color:var(--muted); font-size:.85rem; }
+    .research-note { margin-top:16px; padding:12px 14px; background:#fff; border-left:3px solid var(--red); color:var(--muted); font-size:.78rem; line-height:1.6; }
+    .links a.rlink .src-tag { order:-1; align-self:flex-start; margin-bottom:5px; display:inline-block; font-size:.62rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; }
+    .links a.rlink .src-tag-web { color:var(--muted); }
+    .links a.rlink .src-tag-newshada { color:var(--red); border-color:var(--red); }
+    .links a.rlink .src-tag-hackernews { color:#ff6600; border-color:#ff6600; }
+    .links a.rlink .src-tag-korean_economic_news { color:#0a5c36; border-color:#0a5c36; }
+
+    .foot { margin-top:70px; padding-top:12px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+
+    @media (max-width: 760px) {
+      .page { width:min(100% - 28px, 680px); padding-top:18px; }
+      .grid { column-gap:10px; }
+      .brand { grid-column:1 / span 7; }
+      .issue { grid-column:9 / -1; }
+      .hero { margin-top:50px; }
+      .hero-date { grid-column:1 / -1; font-size:clamp(2.6rem,13vw,4.4rem); line-height:.95; }
+      .hero-note { grid-column:7 / -1; margin-top:34px; }
+      .metrics { margin-top:42px; }
+      .metric { grid-column:span 6; min-height:112px; padding:13px 8px 13px 0; border-bottom:1px solid var(--line); }
+      .metric:nth-child(even) { border-right:0; padding-left:10px; }
+      .metric strong { font-size:2.3rem; }
+      .jump { gap:8px 14px; }
+      .section { margin-top:78px; }
+      .section-index { grid-column:1 / span 2; }
+      .section-title { grid-column:3 / -1; font-size:1.9rem; }
+      .section-meta { grid-column:3 / -1; margin-top:14px; justify-self:start; text-align:left; }
+      .ref-row { grid-template-columns:28px 1fr; gap:4px 12px; }
+      .ref-row .no,.ref-row .ref-body { grid-column:auto; }
+      .links li { grid-template-columns:72px 1fr; gap:8px 12px; }
+      .links li > .t,.links a.rlink,.links li > small.rdate { grid-column:auto; }
+      .links a.rlink { grid-column:2; }
+      .links li > small.rdate { grid-column:2; text-align:left; }
+      .research-narrative { max-width:none; }
+      .research-inner { padding:18px 14px; }
+      .foot { flex-direction:column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html{scroll-behavior:auto} }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <div class="grid"><div class="brand">스레드<br>위클리</div><div class="issue">Scrap &amp; Research Digest<br>Threads Weekly</div></div>
+    <div class="grid hero"><h1 class="hero-date">2026.11.01</h1><p class="hero-note">Sample Issue v2<span>큐레이션·에디토리얼 리서치</span></p></div>
+  </header>
+
+  <section class="grid metrics" aria-label="이번 호 통계">
+    <div class="metric"><strong>3</strong><span>다룬 토픽 수</span></div>
+    <div class="metric"><strong>23</strong><span>리서치 소스 수</span></div>
+    <div class="metric"><strong>58</strong><span>기간<em>(일)</em></span></div>
+    <div class="metric"><strong>6</strong><span>참고 원문<em>(각주)</em></span></div>
+  </section>
+  <nav class="jump" aria-label="바로가기"><a href="#topic-one-model-vs-fast-part">받아쓰기 전쟁: 엔비디아는</a><a href="#topic-read-hundred-pages-vs-one-page">문서 읽기 두 갈래: 수백</a><a href="#topic-ai-tone-removal-two-ways">AI 티 빼는 두 가지 방</a></nav>
+  <div class="theme-switch" role="group" aria-label="테마 선택">
+    <button type="button" data-theme-choice="system">시스템</button>
+    <button type="button" data-theme-choice="light">라이트</button>
+    <button type="button" data-theme-choice="dark">다크</button>
+  </div>
+
+  <section id="topic-one-model-vs-fast-part" class="section">
+    <div class="grid section-head"><span class="section-index">01</span><h2 class="section-title">받아쓰기 전쟁: 엔비디아는 모델 하나로 합치고, Rust는 부품 하나를 60배 빠르게 갈았다</h2><p class="section-meta">엔비디아 Nemotron 3.5 Transcribe는 받아쓰기·번역·화자 표시·녹음 질의응답을 체크포인트 하나에 넣었고, 같은 주 speakrs는 화자 분리 한 단계만 Rust GPU 커널로 다시 써서 pyannote보다 60배 빨라졌다. 같은 문제를 반대 방향에서 푸는 한 주.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">엔비디아가 10월 28일(현지시간) Nemotron 3.5 Transcribe를 공개했다. 받아쓰기, 영어 번역, 화자 표시, 녹음 내용 질의응답을 체크포인트 하나로 처리하는 오픈 가중치 모델이다. 전사는 40개 언어, 영어와의 번역은 31개 언어, 화자 표시는 13개 언어이고, 최대 1시간·8명까지 다룬다. 한국어는 전사·번역·화자 표시 목록에 모두 올랐고 모델카드의 FLEURS 한국어 문자 오류율은 2.78%다(토큰포스트 인용, 모든 녹음에서 같은 정확도라는 뜻은 아니라는 단서가 붙는다). 영어 오류율은 매체마다 다르다. GeekNews 요약은 오픈 ASR 평가 5.33%로 공개 모델 1위, AI타임스와 ZDNet코리아는 9개 공개 세트 평균 4.71%로 적었다. 집계 기준이 다른 것으로 보이며, 어느 쪽이 맞는지는 이번 조사에서 판단하지 않았다. 한계는 분명하다. 녹음 파일 전용이고 실시간 스트리밍은 못 한다. HN(134포인트·댓글 26개)에서도 &#x27;녹음용이라 아쉽다&#x27;는 반응이 나왔다. 반대편에서 speakrs는 pyannote community-1 파이프라인을 Rust로 구현한 화자 분리 라이브러리인데, 3주 전까지 ONNX Runtime 위에서 돌던 CUDA 경로를 cuda-oxide로 직접 쓴 GPU 커널로 바꿨다. 저자 블로그 기준 VoxConverse dev(216개 파일)에서 pyannote 2301.3초가 38.2초로 줄어 60.2배, 화자 분리 오류율(DER)은 7.0% 대 7.2%다. 스레드 글이 말한 &#x27;17.7배, RTX 4090&#x27;은 블로그와 다르다. 17.7배는 Parakeet v3와 speakrs를 묶은 dialogrs의 결과이고, RTX 5090에서 212개 녹음·114시간을 처리해 WhisperX 1시간 29분 대 5분 3초였다. 저자는 커널 코드 대부분을 AI 코딩 에이전트가 썼고 목표와 합격 기준은 자신이 정했다고 밝힌다. 이 글은 HN에서 2포인트·댓글 0개로 조용했다. 한쪽은 파이프라인을 모델 하나로 접고, 다른 쪽은 파이프라인을 두고 느린 부품 하나를 갈아 끼운다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=36196" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>NVIDIA Nemotron 3.5 Transcribe - 한국어 포함 40개 언어를 지원하는 공개 음성 인식 모델</b><span>11포인트·댓글 1개(조회 시점). 같은 체크포인트에 지시만 바꿔 전사·화자 표시·영어 번역·회의 결정 질의응답. 영어 Open ASR 평균 WER 5.33%로 공개 가중치 1위, Granary v2는 48개 언어 463,062시간 매니페스트. 실시간 스트리밍용은 아님.</span></a><small class="rdate">2026-10-29</small></li><li><span class="t">R02</span><a class="rlink" href="https://news.ycombinator.com/item?id=50275128" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Nvidia Nemotron 3.5 Transcribe: open ASR for 40 languages</b><span>134포인트·댓글 26개. &#x27;Transcribe는 녹음용이지 라이브 스트리밍이 아니라 아쉽다&#x27;, &#x27;NVIDIA GPU가 필요해 보인다&#x27;, &#x27;near-field 화자 전사는 실험적이지만 다른 오픈 음성 LLM에는 없는 기능&#x27; 같은 반응.</span></a><small class="rdate">2026-10-28</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.ycombinator.com/item?id=50278252" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Writing GPU kernels in Rust: how I made speakrs 60× faster than pyannote</b><span>2포인트·댓글 0개로 반응이 거의 없었다. 블로그 본문은 아래 WEB 소스에서 직접 확인했다.</span></a><small class="rdate">2026-10-28</small></li><li><span class="t">R04</span><a class="rlink" href="https://www.fnnews.com/news/202610290826150279" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>엔비디아, 40개언어 음성인식AI 오픈웨이트로 공개[글로벌AI브리핑]</b><span>파이낸셜뉴스. 녹음 파일을 텍스트로 바꾸고 영어 기준 31개 언어 번역, 한 파일에서 최대 8명 구분. 국내에서도 한국어 포함 다국어 음성인식 서비스에 쓸 수 있다고 전망하되, 실시간 통화·생방송 음성은 처리하지 않는다고 명시.</span></a><small class="rdate">2026-10-29</small></li><li><span class="t">R05</span><a class="rlink" href="https://www.aitimes.com/news/articleView.html?idxno=216779" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>엔비디아, 40개 언어 지원하는 음성 인식 AI 공개…오픈 모델 최고 정확도 달성</b><span>AI타임스. 총 340억·활성 43억 파라미터 MoE, 영어 오픈 ASR 리더보드 WER 4.71%로 공개 가중치 1위, 7개 언어 평균 4.62%. 최적화된 추론 속도는 현재 공개 오픈소스 버전에 모두 포함되지는 않았다고 단서.</span></a><small class="rdate">2026-10-29</small></li><li><span class="t">R06</span><a class="rlink" href="https://www.tokenpost.kr/news/ai/428727" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>엔비디아, 한국어 포함 40개 언어 음성 전사 모델 공개</b><span>토큰포스트. 한국어는 전사·번역·화자 귀속 지원 목록에 포함, 모델카드 FLEURS 한국어 CER 2.78%. 화자 표시는 13개 언어이며 실제 인물 신원 확인은 아니라는 설명.</span></a><small class="rdate">2026-10-29</small></li><li><span class="t">R07</span><a class="rlink" href="https://avencera.com/blog/writing-gpu-kernels-in-rust-speakrs-60x-faster-than-pyannote" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>GPU kernels in Rust: speakrs is 60× faster than pyannote (Avencera 블로그)</b><span>저자 Praveen Perera. VoxConverse dev에서 2301.3초→38.2초(60.2배), DER 7.0% 대 7.2%. 17.7배는 dialogrs(Parakeet v3 + speakrs) 결과이며 RTX 5090, 212개 녹음·114시간, WhisperX 1시간 29분 대 5분 3초. 커널 대부분을 AI 코딩 에이전트가 작성.</span></a><small class="rdate">2026-10-26</small></li></ul><p class="research-note">ℹ️ 이번 호에서 찾지 못한 소스: speakrs는 GeekNews 검색 결과가 없었다(없음). 경제지는 파이낸셜뉴스 1건만 확인했고 speakrs를 다룬 경제지 기사는 없었다. AI타임스·토큰포스트는 IT 전문지라 WEB으로 표시했다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">엔비디아 Nemotron 3.5 Transcribe: 40개 언어 받아쓰기 + 화자 분리 오픈 모델</div><div class="ref-hook">한국어 포함 40개 언어 받아쓰기, 최대 1시간·8명 화자 표시. 단, 녹음 파일 전용이고 실시간 스트리밍은 아니다.</div><div class="ref-links"><a href="https://huggingface.co/nvidia/NVIDIA-Nemotron-3.5-Transcribe-30B-A4B" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-29%20Nvidia%20Nemotron%203.5%20Transcribe%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">speakrs: Rust GPU 커널로 pyannote 대비 화자 분리 60배</div><div class="ref-hook">VoxConverse 38분 분량을 pyannote 2301초에서 38초로. 게시글의 17.7배는 speakrs 단독이 아니라 dialogrs 조합이라는 정정 포인트가 핵심.</div><div class="ref-links"><a href="https://avencera.com/blog/writing-gpu-kernels-in-rust-speakrs-60x-faster-than-pyannote" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-31%20speakrs%20Rust%20GPU%20%EC%BB%A4%EB%84%90%20%ED%99%94%EC%9E%90%EB%B6%84%EB%A6%AC%2060%EB%B0%B0%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-read-hundred-pages-vs-one-page" class="section">
+    <div class="grid section-head"><span class="section-index">02</span><h2 class="section-title">문서 읽기 두 갈래: 수백 페이지를 한 번에 vs 한 페이지씩 구조까지</h2><p class="section-meta">바이두 Unlimited OCR 2는 문서가 길어져도 메모리가 거의 늘지 않게 해서 수백 페이지를 한 요청으로 읽고, 엔비디아 Nemotron 3.5 Parse는 6.3억 파라미터로 페이지 한 장의 레이아웃·좌표·읽기 순서를 뽑는다. 벤치마크가 달라 직접 비교는 못 하지만, 설계 철학은 정반대다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">바이두가 10월 27일 공개한 Unlimited OCR 2는 33억 4천만 파라미터 비전언어모델로, 가중치와 코드는 MIT 라이선스다(AI타임스). 핵심은 SR-SWA라는 희소 어텐션이다. 디코딩할 때 참조하는 토큰을 고정 크기로 묶어서 문서가 길어져도 단계당 지연과 메모리가 거의 일정하다. 논문은 100페이지 규모에서 풀 어텐션 대비 단계당 7.0배, 이전 방식(R-SWA) 대비 5.6배 빠르다고 적는다. 바이두는 새 벤치마크 MarathonDocBench에서 77.1점을 받아 비교 모델 Kimi K3의 33.7점을 크게 앞섰다고 밝혔지만, 이는 바이두 자체 평가다. 스레드 글이 말한 &#x27;캐시 47GB→1.77GB&#x27;는 이번 조사에서 원문으로 확인하지 못했다. 논문이 직접 적은 한계도 있다. 훈련 데이터 다양성이 아직 제한적이고, 희소 어텐션이 문서 전체 정보를 보존하지 않아 제목 계층 같은 문서 단위 구조 이해가 약하다. 반대편의 엔비디아 Nemotron 3.5 Parse는 6.31억 파라미터로 페이지 이미지를 의미 클래스, 좌표, 읽기 순서가 붙은 텍스트로 바꾼다. ParseBench에서 1B 미만 모델 중 1위(75.20점, 10월 20일 기준)이고 H100 한 장에서 초당 10.5페이지(3회 패스 기준, 1회 패스는 72.74점·16.1페이지)다. 다만 NIM 릴리스 노트는 요청 하나에 페이지 한 장만 받고 출력은 9,000토큰까지라서 아주 빽빽한 페이지는 잘릴 수 있다고 적는다. 두 모델은 벤치마크가 달라(MarathonDocBench 대 ParseBench) 점수를 나란히 놓고 우열을 말할 수 없다. HN 반응은 갈렸다. 전작 Unlimited OCR은 496포인트·댓글 110개로 크게 화제였고 &#x27;OCR은 이미 풀린 문제 아닌가&#x27;, &#x27;AI OCR은 없는 글자를 지어낸다&#x27;는 회의론이 상위에 있었다. 2편은 11포인트·댓글 0개로 조용했다. 수백 페이지를 한 번에 읽는 쪽과 한 페이지의 구조를 정확히 뽑는 쪽, 어느 쪽이 맞는지는 문서 길이와 목적에 달렸다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=36137" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Unlimited-OCR 2 - 페이지 간 문맥을 이어 수백 페이지 문서를 파싱하는 OCR 모델</b><span>18포인트(조회 시점). Baidu가 여러 페이지를 한 요청으로 처리하는 Unlimited-OCR 2를 공개. 페이지 간 문맥을 활용하며 유한한 컨텍스트 윈도 안에서 매우 긴 문서를 다룬다.</span></a><small class="rdate">2026-10월</small></li><li><span class="t">R02</span><a class="rlink" href="https://news.ycombinator.com/item?id=50259228" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Unlimited-OCR-2: Baidu open-sources an OCR model for unlimited-horizon parsing</b><span>11포인트·댓글 0개로 반응이 거의 없었다.</span></a><small class="rdate">2026-10-27</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.ycombinator.com/item?id=48643426" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Unlimited OCR: One-shot long-horizon parsing (전작)</b><span>전작 글. 496포인트·댓글 110개. 상위 댓글에 &#x27;OCR은 비전 모델로 이미 해결된 문제인데 왜 엔진을 다시 만드나&#x27;, &#x27;AI OCR은 다른 언어 단어를 영어로 번역해 버리는 등 없는 결과물을 만든다&#x27;는 회의론, &#x27;DeepSeek-OCR에 감사를 표기한 점이 멋지다&#x27;는 반응.</span></a><small class="rdate">2026-06-23</small></li><li><span class="t">R04</span><a class="rlink" href="https://www.chosun.com/economy/tech_it/2026/06/29/K5HK4LAGR5BGNKQ5A5XAIWITJY/" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>바이두, 40페이지 문서 한 번에 읽는 AI 공개...AI 데이터 관문된 &#x27;OCR&#x27; 기술 경쟁 (전작 보도)</b><span>조선일보. 6월 22일 공개된 1편 Unlimited-OCR 보도. R-SWA로 문서 전체를 한 번에 읽어 내려가며, 공개 이틀 만에 깃허브 스타 4000개를 넘겼다. 2편이 아닌 전작 기사임에 주의.</span></a><small class="rdate">2026-06-29</small></li><li><span class="t">R05</span><a class="rlink" href="https://www.aitimes.com/news/articleView.html?idxno=216762" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>[AI 모델 신작] 바이두, 100페이지 이상 문서 읽는 OCR 공개 등 6종</b><span>AI타임스. 33억 4천만 파라미터 VLM, 표·수식·그림·제목 구조 인식, MarathonDocBench 77.1점 대 Kimi K3 33.7점(바이두 자체 발표), MIT 라이선스.</span></a><small class="rdate">2026-10-28</small></li><li><span class="t">R06</span><a class="rlink" href="https://media.githubusercontent.com/media/baidu/Unlimited-OCR/main/Unlimited-OCR-2.pdf" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Unlimited OCR Works 2 (기술 보고서 PDF)</b><span>100페이지 규모에서 풀 어텐션 대비 단계당 7.0배, R-SWA 대비 5.6배. 한계 절에서 훈련 데이터 다양성 부족과, 희소 어텐션이 문서 전체 정보를 보존하지 않아 제목 계층 같은 문서 단위 구조 이해가 제한된다고 명시.</span></a><small class="rdate">2026-10-27</small></li><li><span class="t">R07</span><a class="rlink" href="https://huggingface.co/blog/nvidia/nemotron-retriever-world-class-agentic-retrieval" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>NVIDIA Nemotron 3.5 Embed, Rerank, and Parse (Hugging Face 블로그)</b><span>Parse 631M. ParseBench 1B 미만 1위(75.20, 10/20 기준). 3회 패스 75.20점·초당 10.5페이지, 2회 74.92점·11.2페이지, 1회 72.74점·16.1페이지(H100 1장).</span></a><small class="rdate">2026-10-21</small></li><li><span class="t">R08</span><a class="rlink" href="https://docs.nvidia.com/nim/ingestion/parse/latest/release-notes.html" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Release Notes for NVIDIA NIM for Nemotron Parse</b><span>요청 하나에 렌더링된 페이지 한 장(PNG/JPEG). 출력은 최대 9,000토큰이며 빽빽한 페이지는 잘릴 수 있고 이어받기 옵션이 없다. 해결책은 페이지를 잘라 영역별로 파싱하는 것.</span></a><small class="rdate"></small></li></ul><p class="research-note">ℹ️ 이번 호에서 찾지 못한 소스: Nemotron 3.5 Parse는 HN·GeekNews 글을 찾지 못했다(없음). Unlimited OCR 2 자체를 다룬 국내 경제지 기사도 찾지 못해, 경제 항목은 6월 전작(Unlimited-OCR)을 다룬 조선일보 기사로 대신했고 제목 옆에 그 사실을 표시했다. AI타임스는 IT 전문지라 WEB으로 표시했다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">Baidu, 수천 페이지 문서를 처리하는 Unlimited OCR 2 오픈소스 공개</div><div class="ref-hook">SR-SWA로 참조 토큰을 고정 크기로 묶어 수백 페이지를 한 번에. 스레드 글의 &#x27;캐시 47GB→1.77GB&#x27;는 이번 조사에서 원문 확인에 실패했다.</div><div class="ref-links"><a href="https://github.com/baidu/Unlimited-OCR" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-28%20Baidu%20Unlimited%20OCR%202%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%20%EA%B3%B5%EA%B0%9C%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">엔비디아 Nemotron 3.5 Parse — 문서 이미지 파서 공개</div><div class="ref-hook">C-RADIOv4 비전 인코더 + 10층 mBART 디코더, 문서 이미지를 의미 클래스·좌표·읽기 순서가 붙은 텍스트로 바꾼다.</div><div class="ref-links"><a href="https://huggingface.co/nvidia/Nemotron-3.5-Parse" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-25%20%EC%97%94%EB%B9%84%EB%94%94%EC%95%84%20Nemotron%203.5%20Parse%20%EB%AC%B8%EC%84%9C%20%ED%8C%8C%EC%84%9C%20%EA%B3%B5%EA%B0%9C%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-ai-tone-removal-two-ways" class="section">
+    <div class="grid section-head"><span class="section-index">03</span><h2 class="section-title">AI 티 빼는 두 가지 방법: 금지 패턴 사전 vs 항공 정비 문체 규격</h2><p class="section-meta">stop-slop-ko는 긴 줄표·번역투 같은 AI 티 패턴을 잡고 &#x27;~함, ~됨&#x27; 개조식은 건드리지 않는다. Concise Structured는 카파시가 권한 항공 정비 영어 규격(ASD-STE100)을 한국어 출력 스타일로 옮겼다. 같은 주 매일경제는 이런 도구를 &#x27;휴머나이저&#x27;로 묶어 보도했다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">10월 28일 매일경제는 AI가 쓴 글의 반복 표현과 어색한 문장을 고치는 도구가 잇따라 나온다며 이를 &#x27;휴머나이저&#x27;로 묶었고, 한국어 업무 문서용으로 &#x27;스톱 슬롭 한국어판&#x27;을 꼽았다. 전문가들은 문체를 고치는 기능과 AI 작성 탐지를 우회하는 기능은 구분해야 한다고 지적한다. 수요의 배경은 한국경제 보도 두 건에 있다. 10월 2일 기사(WSJ 인용)는 사람들이 챗봇을 닮은 말투를 쓰기 시작했다고 전하고, 10월 13일 기사는 HBR 조사를 인용해 직장인 40%가 최근 한 달 사이 &#x27;워크슬롭&#x27;(겉만 그럴듯한 AI 결과물)을 겪었고 한 건을 고치는 데 평균 2시간이 든다고 전한다. 스크랩한 두 도구는 같은 문제를 반대 방식으로 푼다. stop-slop-ko는 긴 줄표, 띄어 쓴 가운뎃점 나열, &#x27;~을 통하여&#x27; 같은 번역투를 금지 패턴으로 잡고, 예제 문서 경고가 9개에서 0개로 줄었다고 한다. 영어판 stop-slop의 &#x27;능동태, 짧게&#x27;를 그대로 옮기지 않았고, &#x27;~함, ~됨&#x27; 개조식은 한국어 보고서의 정상 문체라서 건드리지 않는다. Concise Structured는 카파시가 10월 2일 X에 쓴 팁(LLM에게 항공 정비 문서용 영어 규격 ASD-STE100으로 쓰게 하고, 엄격해서 가끔 80% 수준으로 풀어 요청)을 Claude Code output style로 옮겼다. 다만 &#x27;간결하게&#x27;가 문장을 부수라는 뜻은 아니라며 조사와 서술어를 살리라고 규칙에 적었다. ASD-STE100 자체가 영어 규격이라 한국어에는 그대로 쓸 표준이 마땅치 않다는 지적이 국내 기사에 있다(테크수다). 이 팁의 효과를 재 본 사례가 있다. ste-eval은 Claude Opus와 Codex에 &#x27;Speak only in ASD-STE100&#x27; 한 줄만 주고 224개 응답을 블라인드 채점했다. 비영어권 독자용 가독성은 +1.08·+0.92점(5점 척도) 올랐지만 자연스러움은 -1.56·-0.75점 내려갔고, Claude의 생각 토큰은 3.1배로 늘었다. 작성자는 상시로 켜 두지 않고 번역 대상 문서에만 쓴다고 결론 냈다. 한 사람의 실험이고 채점자도 모델이라는 점은 감안해야 한다. HN에서는 7월 30일에 올라온 STE 에이전트 스킬 글이 363포인트·댓글 121개로 이미 화제였고, &#x27;ASD-STE100이 이번 주 AI 유행어냐&#x27;는 냉소와 &#x27;내 이메일에도 써야겠다&#x27;는 반응이 섞였다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=35913" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Show GN: stop-slop-ko - 한국어 문서에서 AI가 쓴 티를 걷어내는 Claude Code 플러그인</b><span>6포인트(조회 시점), 작성자 leeandev 본인 등록. em-dash, 공백 가운뎃점 나열, ★와 이모지, &#x27;~을 통하여&#x27;, &#x27;~되어지다&#x27;를 규칙으로 만들어 공개. 영어 stop-slop의 한국어판.</span></a><small class="rdate">2026-10월</small></li><li><span class="t">R02</span><a class="rlink" href="https://news.hada.io/topic?id=32024" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>ASD-STE100 간소화 기술 영어로 문서 작성을 강제하는 Agent Skill</b><span>5포인트·댓글 1개(조회 시점). SimpleEnglish 스킬이 53개 규칙을 적용. Claude 6개 모델·8개 작업 96회 평가에서 100단어당 STE 위반이 평균 72.9% 감소했고 출력 토큰도 줄었다고 소개(스킬 제작자 자체 평가).</span></a><small class="rdate"></small></li><li><span class="t">R03</span><a class="rlink" href="https://news.ycombinator.com/item?id=49114639" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Agent Skill to Force Docs in ASD-STE100 Simplified Technical English</b><span>363포인트·댓글 121개. 카파시 글(10/2)보다 두 달 앞선 7월 글. &#x27;ASD-STE100이 이번 주 AI 유행어냐&#x27;는 냉소와 &#x27;내 이메일에도 써야겠다&#x27;는 반응이 섞였다.</span></a><small class="rdate">2026-07-30</small></li><li><span class="t">R04</span><a class="rlink" href="https://www.mk.co.kr/news/it/12189027" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>“AI가 쓴 티 안 나게 해줘” ‘휴머나이저’ 도구 잇따라</b><span>매일경제. 한국어용 &#x27;아임낫AI&#x27;(깃허브 별 6000개 이상)와 &#x27;스톱 슬롭 한국어판&#x27;을 소개. 전문가들은 문체 교정과 AI 탐지 우회를 구분해야 한다고 지적.</span></a><small class="rdate">2026-10-28</small></li><li><span class="t">R05</span><a class="rlink" href="https://www.hankyung.com/article/202610029744i" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>&quot;요즘 직장인 말투 왜 이래?&quot;…챗GPT 쓰더니 &#x27;뜻밖의 변화&#x27;</b><span>한국경제(WSJ 인용). 회의·이메일·슬랙에서 챗봇식 화법이 사람 말투로 번지고, AI 말투를 쓸 때마다 표시하는 &#x27;프롬프트 말투 저금통&#x27; 사례까지 소개.</span></a><small class="rdate">2026-10-02</small></li><li><span class="t">R06</span><a class="rlink" href="https://www.hankyung.com/article/2026101394971" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>&quot;AI 보고서 검증없이 떠넘겨&quot;…직장 갈등 부르는 &#x27;워크슬롭&#x27;</b><span>한국경제(HBR·FT 인용). 미국 사무직 1150명 조사에서 40%가 직전 한 달간 워크슬롭 경험, 한 건 수정에 평균 2시간, 직원 1만 명 기업 기준 연 900만 달러 추산.</span></a><small class="rdate">2026-10-13</small></li><li><span class="t">R07</span><a class="rlink" href="https://www.techsuda.com/karpathy-shares-four-step-ladder-for-understanding-llm-outputs" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>카파시 &quot;AI가 일하고 사람은 이해한다&quot;…글→도식→웹→영상, LLM 결과물 읽는 4단계 사다리</b><span>테크수다. 카파시의 10/2 X 글 정리: ASD-STE100으로 쓰게 하고(엄격해서 80% 수준으로 완화), 도식, HTML, 설명 영상 순으로 올라가는 4단계. ASD-STE100은 영어 규격이라 한국어에는 마땅한 표준이 없다는 한계도 지적.</span></a><small class="rdate">2026-10-02</small></li><li><span class="t">R08</span><a class="rlink" href="https://github.com/Thakay/ste-eval" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>ste-eval: Does Simplified Technical English make coding agents write better? (GitHub)</b><span>224개 응답 블라인드 채점. &#x27;Speak only in ASD-STE100&#x27; 한 줄: 비영어권 독자용 가독성 +1.08(Claude Opus)·+0.92(Codex), 자연스러움 -1.56·-0.75, Claude 생각 토큰 3.1배. 작성자는 상시 적용 대신 번역 대상 문서에만 쓰는 방식을 택함. 개인 실험이며 채점자는 모델.</span></a><small class="rdate"></small></li></ul><p class="research-note">ℹ️ 이번 호에서 찾지 못한 소스: stop-slop-ko와 Concise Structured를 직접 다룬 HN 글은 찾지 못했다(없음). HN 항목은 카파시 팁보다 두 달 앞선 7월 STE 스킬 글이라 시점이 다르다. 카파시 팁 자체를 다룬 국내 경제지는 못 찾았고, 경제 항목은 AI 말투·휴머나이저·워크슬롭 보도 3건으로 맥락을 대신했다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">stop-slop-ko: 한국어 문서에서 &quot;AI가 쓴 티&quot;를 걷어내는 Claude Code 플러그인</div><div class="ref-hook">예제 문서 경고가 9개에서 0개로. 영어판 stop-slop의 &#x27;능동태·짧게&#x27;를 그대로 옮기면 한국어 보고서가 오히려 어색해져서 재설계했다는 설명이 재미있다.</div><div class="ref-links"><a href="https://github.com/leeandev/stop-slop-ko" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-25%20stop-slop-ko%20%ED%95%9C%EA%B5%AD%EC%96%B4%20AI%20%ED%8B%B0%20%EC%A0%9C%EA%B1%B0%20Claude%20Code%20%ED%94%8C%EB%9F%AC%EA%B7%B8%EC%9D%B8%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">Concise Structured — 카파시식 간결 출력 프롬프트 (Claude Code output style)</div><div class="ref-hook">표·개조식 우선, 조사와 서술어는 살리기, 한 낱말은 한 뜻으로. ASD-STE100을 80% 수준으로 따온 Claude Code output style.</div><div class="ref-links"><a href="https://www.threads.com/@buildnwrite/post/De69kjYmrdF" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-26%20Concise%20Structured%20%EC%B9%B4%ED%8C%8C%EC%8B%9C%EC%8B%9D%20%EA%B0%84%EA%B2%B0%20%EC%B6%9C%EB%A0%A5%20%ED%94%84%EB%A1%AC%ED%94%84%ED%8A%B8%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+
+  <footer class="foot"><span>2026-11-01</span><span>Automatically generated · Threads Weekly (Sample Issue)</span></footer>
+</div>
+<script>
+(function () {
+  var KEY = 'threads-weekly-theme';
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-switch button');
+  function apply(mode) {
+    if (mode === 'light' || mode === 'dark') { root.setAttribute('data-theme', mode); }
+    else { root.removeAttribute('data-theme'); mode = 'system'; }
+    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.themeChoice === mode); });
+  }
+  var saved = localStorage.getItem(KEY) || 'system';
+  apply(saved);
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.dataset.themeChoice;
+      localStorage.setItem(KEY, mode);
+      apply(mode);
+    });
+  });
+})();
+</script>
+</body>
+</html>
