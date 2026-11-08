@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>스레드 위클리</title>
+  <style>
+    :root {
+      --red: #e30613;
+      --ink: #111;
+      --paper: #fff;
+      --soft: #f2f2f2;
+      --muted: #686868;
+      --line: #c8c8c8;
+      --font: "Helvetica Neue", "Akzidenz-Grotesk", Inter, Arial, "Apple SD Gothic Neo", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    }
+    :root[data-theme="light"] { --ink:#111; --paper:#fff; --soft:#f2f2f2; --muted:#686868; --line:#c8c8c8; }
+    :root[data-theme="dark"] { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; }
+    button { font:inherit; }
+    h1,h2,h3,p,figure,blockquote,ol,ul { margin:0; }
+    ol,ul { padding:0; }
+    .page { width:min(100% - 40px, 1280px); margin:0 auto; padding:28px 0 64px; }
+    .grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; }
+    .kicker { color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .rule { border-top:1px solid var(--ink); }
+
+    .mast { border-top:8px solid var(--red); padding-top:18px; }
+    .brand { grid-column:1 / span 5; font-size:clamp(1.1rem,2vw,1.65rem); font-weight:900; letter-spacing:-.04em; line-height:1; }
+    .issue { grid-column:9 / -1; text-align:right; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .hero { margin-top:72px; align-items:end; }
+    .hero-date { grid-column:1 / span 8; font-size:clamp(2.4rem,7vw,6.4rem); font-weight:900; letter-spacing:-.06em; line-height:.9; word-break:keep-all; }
+    .hero-note { grid-column:10 / -1; padding-top:12px; border-top:1px solid var(--ink); font-size:.82rem; font-weight:700; }
+    .hero-note span { display:block; margin-top:8px; color:var(--muted); font-weight:500; }
+
+    .metrics { margin-top:64px; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+    .metric { grid-column:span 3; min-height:145px; padding:16px 12px 18px 0; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; }
+    .metric:last-child { border-right:0; }
+    .metric strong { font-size:clamp(2.2rem,4.6vw,4.6rem); font-weight:900; letter-spacing:-.06em; line-height:.9; font-variant-numeric:tabular-nums; }
+    .metric span { max-width:10rem; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .metric em { color:var(--red); font-style:normal; }
+
+    .jump { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 20px; }
+    .jump a { text-decoration:none; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .jump a::before { content:"↘ "; color:var(--red); }
+
+    .theme-switch { margin-top:16px; display:flex; gap:6px; }
+    .theme-switch button { border:1px solid var(--line); background:transparent; color:var(--muted); padding:5px 11px; font-size:.68rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; }
+    .theme-switch button.on { border-color:var(--red); color:var(--red); }
+
+    .section { margin-top:120px; }
+    .section-head { align-items:end; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+    .section-index { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; }
+    .section-title { grid-column:2 / span 7; font-size:clamp(1.6rem,3vw,3.1rem); font-weight:900; letter-spacing:-.05em; line-height:1.05; }
+    .section-meta { grid-column:10 / -1; text-align:right; color:var(--muted); font-size:.76rem; font-weight:700; line-height:1.4; }
+
+    /* v2: 멤버 기사는 짧은 레퍼런스 줄(후크 한 줄 + 링크)로만 표시 — 본문 덤프 없음 */
+    .refs { margin-top:10px; }
+    .refs-head { font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .ref-row { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:baseline; padding:10px 0; border-bottom:1px solid var(--line); font-size:.85rem; }
+    .ref-row:last-child { border-bottom:0; }
+    .ref-row .no { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ref-row .ref-body { grid-column:2 / span 9; min-width:0; }
+    .ref-row .ref-title { font-weight:700; letter-spacing:-.01em; }
+    .ref-row .ref-hook { color:var(--muted); margin-top:2px; }
+    .ref-row .ref-links { margin-top:4px; font-size:.76rem; font-weight:700; }
+    .ref-row .ref-links a { color:var(--red); text-decoration:none; border-bottom:1px solid var(--red); margin-right:14px; }
+
+    .research { margin-top:26px; padding:24px 0 10px; background:var(--soft); }
+    .research-inner { padding:24px 28px; }
+    .research-head { font-size:.82rem; font-weight:900; letter-spacing:.04em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .research-head .dot { color:var(--red); }
+    .research-narrative { font-size:1.02rem; line-height:1.85; color:var(--ink); max-width:72ch; margin-bottom:22px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+    .links { list-style:none; }
+    .links li { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:start; padding:13px 0; border-bottom:1px solid var(--line); }
+    .links li:last-child { border-bottom: 0; }
+    .links li > .t { grid-column:1 / span 2; color:var(--red); font-size:.68rem; font-weight:900; letter-spacing:.04em; }
+    .links a.rlink { grid-column:3 / span 7; min-width:0; display:flex; flex-direction:column; text-decoration:none; }
+    .links a.rlink b { font-size:.92rem; line-height:1.35; }
+    .links a.rlink span { margin-top:3px; color:var(--muted); font-size:.78rem; line-height:1.5; }
+    .links li > small.rdate { grid-column:11 / -1; color:var(--muted); font-size:.72rem; text-align:right; }
+    .research-empty { padding:16px 0; color:var(--muted); font-size:.85rem; }
+    .research-note { margin-top:16px; padding:12px 14px; background:#fff; border-left:3px solid var(--red); color:var(--muted); font-size:.78rem; line-height:1.6; }
+    .links a.rlink .src-tag { order:-1; align-self:flex-start; margin-bottom:5px; display:inline-block; font-size:.62rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; }
+    .links a.rlink .src-tag-web { color:var(--muted); }
+    .links a.rlink .src-tag-newshada { color:var(--red); border-color:var(--red); }
+    .links a.rlink .src-tag-hackernews { color:#ff6600; border-color:#ff6600; }
+    .links a.rlink .src-tag-korean_economic_news { color:#0a5c36; border-color:#0a5c36; }
+
+    .foot { margin-top:70px; padding-top:12px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+
+    @media (max-width: 760px) {
+      .page { width:min(100% - 28px, 680px); padding-top:18px; }
+      .grid { column-gap:10px; }
+      .brand { grid-column:1 / span 7; }
+      .issue { grid-column:9 / -1; }
+      .hero { margin-top:50px; }
+      .hero-date { grid-column:1 / -1; font-size:clamp(2.6rem,13vw,4.4rem); line-height:.95; }
+      .hero-note { grid-column:7 / -1; margin-top:34px; }
+      .metrics { margin-top:42px; }
+      .metric { grid-column:span 6; min-height:112px; padding:13px 8px 13px 0; border-bottom:1px solid var(--line); }
+      .metric:nth-child(even) { border-right:0; padding-left:10px; }
+      .metric strong { font-size:2.3rem; }
+      .jump { gap:8px 14px; }
+      .section { margin-top:78px; }
+      .section-index { grid-column:1 / span 2; }
+      .section-title { grid-column:3 / -1; font-size:1.9rem; }
+      .section-meta { grid-column:3 / -1; margin-top:14px; justify-self:start; text-align:left; }
+      .ref-row { grid-template-columns:28px 1fr; gap:4px 12px; }
+      .ref-row .no,.ref-row .ref-body { grid-column:auto; }
+      .links li { grid-template-columns:72px 1fr; gap:8px 12px; }
+      .links li > .t,.links a.rlink,.links li > small.rdate { grid-column:auto; }
+      .links a.rlink { grid-column:2; }
+      .links li > small.rdate { grid-column:2; text-align:left; }
+      .research-narrative { max-width:none; }
+      .research-inner { padding:18px 14px; }
+      .foot { flex-direction:column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html{scroll-behavior:auto} }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <div class="grid"><div class="brand">스레드<br>위클리</div><div class="issue">Scrap &amp; Research Digest<br>Threads Weekly</div></div>
+    <div class="grid hero"><h1 class="hero-date">2026.11.08</h1><p class="hero-note">Sample Issue v2<span>큐레이션·에디토리얼 리서치</span></p></div>
+  </header>
+
+  <section class="grid metrics" aria-label="이번 호 통계">
+    <div class="metric"><strong>3</strong><span>다룬 토픽 수</span></div>
+    <div class="metric"><strong>24</strong><span>리서치 소스 수</span></div>
+    <div class="metric"><strong>58</strong><span>기간<em>(일)</em></span></div>
+    <div class="metric"><strong>7</strong><span>참고 원문<em>(각주)</em></span></div>
+  </section>
+  <nav class="jump" aria-label="바로가기"><a href="#topic-agent-memory-wrong-notes">에이전트가 틀린 기억을 막</a><a href="#topic-agent-design-pin-or-fetch">에이전트에게 디자인을 맡기</a><a href="#topic-small-model-two-meanings">&#x27;작다&#x27;의 두 가지 뜻: </a></nav>
+  <div class="theme-switch" role="group" aria-label="테마 선택">
+    <button type="button" data-theme-choice="system">시스템</button>
+    <button type="button" data-theme-choice="light">라이트</button>
+    <button type="button" data-theme-choice="dark">다크</button>
+  </div>
+
+  <section id="topic-agent-memory-wrong-notes" class="section">
+    <div class="grid section-head"><span class="section-index">01</span><h2 class="section-title">에이전트가 틀린 기억을 막는 세 시점: 세션 사이, 답변 직전, 저장 직전</h2><p class="section-meta">Anthropic의 dreaming은 세션 사이에 메모를 원본 기록과 대조해 고친다. NVIDIA Auto Ontology는 에이전트가 만든 SQL을 인증된 업무 정의로 검증한다. AutoRAG Agent는 판단 전용 모델 Jev로 저장 직전에 근거를 거른다. 셋 다 &#x27;에이전트가 자신 있게 틀리는 문제&#x27;를 서로 다른 시점에서 막는다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">Anthropic은 11월 6일 엔지니어링 블로그에 &#x27;에이전트 기억의 구성 요소&#x27;를 올렸다. 핵심은 dreaming이다. 일하는 중에는 메모를 가볍게 남기고, 세션 사이에 Claude가 원본 기록을 다시 읽어 틀린 메모를 고치고 위키로 묶는다. 모델 가중치는 바뀌지 않는다. 블로그의 수치는 전부 Anthropic 자체 평가다. 파일 약 35만 개(약 4.2억 토큰)로 위키를 만들고 dreaming을 2세션에서 128세션으로 늘리자, 질문 25개의 채점 기준 충족률이 위키만으로 13%에서 48%가 됐다. 검색을 더하면 54%에서 61%이고 검색만 쓰면 53%였다. 같은 글이 한계도 적는다. 한 단일 문서 과제에서는 위키의 이득이 뚜렷하지 않았고, 다른 과제에서는 위키가 원본 파일보다 1.77배 커졌다(AI 뉴스 데일리 요약). 기능 자체는 새 소식이 아니다. 토큰포스트에 따르면 dreaming 제품 발표는 5월 19일이었고 지금도 접근을 신청한 사람만 쓰는 연구 프리뷰이며, Harvey 테스트의 &#x27;작업 완료율 약 6배&#x27;는 비교 조건이 공개되지 않았다. HN(148포인트, 댓글 73개)의 반응은 갈렸다. 한쪽은 &#x27;메모를 .md 파일에 써서 다시 넣는 일을 dreaming이라 부르는 건 마케팅&#x27;이라 했고, 다른 쪽은 &#x27;모든 하네스에서 자동 메모를 꺼 뒀고 만들어진 메모의 95%는 지운다&#x27;고 했다. NVIDIA Auto Ontology는 같은 문제를 다른 시점에서 푼다. 메타데이터로 업무 용어, 지표, 관계를 미리 정리하고, 에이전트가 만든 SQL을 인증된 정의와 데이터 계보에 대조해 출처와 함께 돌려준다. AI타임스에 따르면 NVIDIA는 &#x27;온톨로지 생성 시간 90% 단축&#x27;을 내세웠지만 답변 정확도 수치는 내놓지 않았고, 자동 생성한 정의는 담당자의 검토와 승인이 필요하다. HN(290포인트, 댓글 139개)에서는 &#x27;NVIDIA API 키가 꼭 필요하냐&#x27;는 질문이 나왔고, GeekNews 댓글에는 키는 NVIDIA 호스팅을 쓸 때만 필요하다는 답이 달렸다. 조회 시점 GitHub 스타는 9,776개다. AutoRAG Agent의 Jev는 저장 직전을 지킨다. Threads 글과 README에 따르면 답변을 뒷받침한다고 Jev가 판단한 인용 근거만 memory.json에 저장하고, 그 기억은 이후 검색에서 참고용으로만 쓴다. 이 글은 개인 프로젝트의 사용법 소개이고 레포는 스타 5,402개(기존 Python AutoRAG 포함), Apache-2.0이다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=36775" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>에이전트 메모리 설계 - 무엇을 기억하고, 잘못된 기억은 어떻게 고칠까</b><span>검색 결과 요약 기준. 드리밍은 세션 사이에 메모를 원본 대화 로그와 대조해 오류를 고치고, 여러 세션에 흩어진 노트를 주제별로 연결하는 과정이라고 정리. 포인트·댓글 수는 확인하지 못함.</span></a><small class="rdate"></small></li><li><span class="t">R02</span><a class="rlink" href="https://news.hada.io/topic?id=36528" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>NVIDIA Auto Ontology - 기업 데이터의 의미와 관계를 AI 에이전트에 연결하는 오픈소스 도구</b><span>수집 시점 1포인트·댓글 1개 표기. Databricks, PostgreSQL, Snowflake, DuckDB 연결, MCP 도구 9종은 조회 전용. 댓글에서는 &#x27;RDF/OWL 대신 쓸 이유&#x27;, &#x27;NVIDIA API 키가 필수냐&#x27;가 나왔고 키는 NVIDIA 호스팅 사용 시에만 필요하다는 답이 달림.</span></a><small class="rdate"></small></li><li><span class="t">R03</span><a class="rlink" href="https://news.ycombinator.com/item?id=50402212" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>The Components of Agent Memory</b><span>148포인트·댓글 73개(최상위 댓글 21개). &#x27;설계를 깔끔하게 정리했다&#x27;는 반응과 &#x27;.md 메모를 dreaming이라 부르는 건 마케팅&#x27;이라는 비판, &#x27;자동 메모는 꺼 두고 95%는 지운다&#x27;는 후기가 공존.</span></a><small class="rdate">2026-11-07</small></li><li><span class="t">R04</span><a class="rlink" href="https://news.ycombinator.com/item?id=50348962" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Nvidia - open-source auto-ontology</b><span>290포인트·댓글 139개(최상위 댓글 22개). &#x27;기업 기술 부채의 게임 체인저&#x27;라는 기대, &#x27;신뢰 못 하는 에이전트를 더 붙여 고치는 격&#x27;이라는 회의, &#x27;NVIDIA API 키가 필요해 보인다&#x27;는 질문이 나옴.</span></a><small class="rdate">2026-11-03</small></li><li><span class="t">R05</span><a class="rlink" href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>The components of agent memory (Anthropic Engineering)</b><span>원문. dreaming 정의, CL-Bench와 포켓몬 실험, 위키 13%→48%, 검색+위키 54%→61%(검색만 53%), 질문당 약 2만 토큰 절감, MEMORY.md 첫 200줄 또는 25KB만 주입. 모든 수치는 Anthropic 자체 평가.</span></a><small class="rdate">2026-11-06</small></li><li><span class="t">R06</span><a class="rlink" href="https://www.tokenpost.kr/news/ai/434301" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>클로드 기억 정리 예제 공개…드리밍은 연구 프리뷰</b><span>토큰포스트. dreaming 제품 발표는 5월 19일, 지금도 접근 신청이 필요한 연구 프리뷰. Harvey 테스트 &#x27;완료율 약 6배&#x27;는 비교 조건 미공개. 세션 기록은 ZDR과 HIPAA 적용 대상이 아니라는 점도 짚음.</span></a><small class="rdate">2026-11-07</small></li><li><span class="t">R07</span><a class="rlink" href="https://ailetter.ai.kr/ko/d/2026-11-07/4" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>클로드가 &#x27;꿈&#x27;으로 기억을 정리한다…앤트로픽 블로그, 128세션 돌리자 위키 점수 13%→48%</b><span>AI 뉴스 데일리. 계약 사실 포함률 72%(57개 중 41개)에서 100%. 한계로 단일 문서 과제에서 위키 이득이 뚜렷하지 않았고 다른 과제에서 위키가 원본보다 1.77배 커졌다고 정리.</span></a><small class="rdate">2026-11-07</small></li><li><span class="t">R08</span><a class="rlink" href="https://www.aitimes.com/news/articleView.html?idxno=217004" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>엔비디아, 기업 데이터 이해하는 &#x27;오토 온톨로지&#x27; 공개…AI 정확도 높인다</b><span>AI타임스. 온톨로지 생성 시간 90% 단축은 NVIDIA 자체 테스트이고 답변 정확도 수치는 없음. 자동 생성한 정의는 담당자 검토와 승인이 필요. 델은 2027년 상반기 통합 시맨틱 계층 출시 예정, 스노우플레이크는 비즈니스 온톨로지 발표.</span></a><small class="rdate">2026-11-04</small></li><li><span class="t">R09</span><a class="rlink" href="https://github.com/Marker-Inc-Korea/AutoRAG" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>GitHub - Marker-Inc-Korea/AutoRAG (AutoRAG Agent)</b><span>GitHub API 직접 조회: 스타 5,402개, Apache-2.0, 마지막 push 2026-11-06. 기존 Python AutoRAG는 legacy로 이동하고 AutoRAG 2.0은 개인 사서 에이전트. 별도 보도나 커뮤니티 토론은 찾지 못함.</span></a><small class="rdate">2026-11-06</small></li></ul><p class="research-note">ℹ️ 이번 호에서 찾지 못한 소스: AutoRAG Agent는 GeekNews, HN, 경제지 모두 검색 결과가 없다(없음). dreaming과 Auto Ontology도 경제지 기사는 없었다. 파이낸셜뉴스 11월 5일자에 국내 온톨로지 기업(S2W, E8) 기사가 있었지만 NVIDIA 제품을 다룬 글이 아니라 소스로 넣지 않았다. AI타임스, 토큰포스트, AI 뉴스 데일리는 IT 전문지라 WEB으로 표시했다. GeekNews 본문은 직접 접근이 403으로 막혀 검색 결과 요약 기준이다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (3)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">Anthropic &quot;Dreaming&quot;: 에이전트 기억의 구성 요소</div><div class="ref-hook">일하는 중에는 가볍게 적고, 세션 사이에 원본 기록과 대조해 고친다. 포켓몬에서 메모 413개를 쓴 모델은 배지 1개, 파일 9개만 쓴 모델은 배지 4개.</div><div class="ref-links"><a href="https://www.anthropic.com/research/components-of-agent-memory" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-07%20Anthropic%20Dreaming%20%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8%20%EA%B8%B0%EC%96%B5%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">NVIDIA Auto Ontology 공개 (온톨로지 자동 구축 오픈소스)</div><div class="ref-hook">Discover, Ground, Validate, Expose, Learn 다섯 단계. 생성한 SQL을 인증된 업무 정의와 계보로 검증하고 답변마다 출처를 돌려준다.</div><div class="ref-links"><a href="https://github.com/NVIDIA/auto-ontology" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-04%20NVIDIA%20Auto%20Ontology%20%EA%B3%B5%EA%B0%9C%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">03</span><div class="ref-body"><div class="ref-title">AutoRAG Agent: &quot;나의 Jev 활용법&quot; (@bunniesossdev)</div><div class="ref-hook">판단 전용 모델 Jev를 라우팅, 답변 검증, 인용 검증, 메모리 저장 전 검증에 쓴다. 다섯 번째 &#x27;실행 승인 게이트&#x27;는 작성자가 설명을 적지 않았다.</div><div class="ref-links"><a href="https://github.com/Marker-Inc-Korea/AutoRAG" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-07%20AutoRAG%20Agent%20-%20Jev%20%ED%99%9C%EC%9A%A9%EB%B2%95%20%28bunniesossdev%29%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-agent-design-pin-or-fetch" class="section">
+    <div class="grid section-head"><span class="section-index">02</span><h2 class="section-title">에이전트에게 디자인을 맡기는 법: 레퍼런스를 매번 가져오게 할까, 시스템을 한 번 박아둘까</h2><p class="section-meta">&#x27;AI 슬롭을 줄이려면 에이전트에게 좋은 레퍼런스 5곳을 줘라&#x27;는 글의 댓글에서는, MCP로 실시간 조회하면 화면마다 결과가 달라지니 한 번 확정해 파일로 고정하라는 제안이 나왔다. Meta의 Astryx는 그 고정 쪽에 가까운 구조를 제품으로 내놓았다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">Threads의 &#x27;디자인 슬롭 방지&#x27; 글은 에이전트에게 레퍼런스 5곳(jiro.build, Design Spells, Refero Styles, Supahero, Mobbin)을 주라는 내용이다. 알맹이는 댓글에 있었다. 한 댓글은 MCP로 실시간 조회하면 실행마다 다른 조각이 나와 화면 간 일관성이 깨진다며, 레퍼런스 세트를 한 번 확정하고 토큰, 간격, 상태를 파일로 기록해 에이전트가 다시 읽게 하라고 했다. MCP는 고르는 도구이고 빌드 기준은 파일이라는 구분이다. 다른 댓글은 이 사이트들도 서로를 참조해 만든 것이라 결국 슬롭이 더 늘 뿐이라고 반박했다. Meta의 Astryx는 이 논쟁과 맞닿은 제품이다. 아래는 우리의 해석인데, &#x27;고정&#x27; 쪽에 가까운 구조다. swizzle로 컴포넌트 전체 소스를 프로젝트로 꺼내 직접 소유하고, 테마는 CSS 변수 덮어쓰기 묶음이며, API와 문서와 CLI를 사람과 AI 어시스턴트가 같은 레퍼런스로 쓰도록 함께 설계했다. 공식 블로그는 접근성을 갖춘 컴포넌트 150개 이상, 내부 8년, 앱 13,000개 이상을 내세운다. InfoQ는 CLI와 MCP 도구가 함께 제공된다고 전한다. 그런데 이 소식은 새롭지 않다. HN에는 6월 24일에 올라왔고 반응은 12포인트, 댓글 2개였다(&#x27;matcha 테마가 마음에 든다&#x27;, &#x27;Meta를 믿기는 어렵다&#x27;). 공개일은 출처마다 다르다. GCN은 6월 28일, Life at Meta 게시물은 7월 2일이다. 테마 수도 MarkTechPost는 7종, GCN은 10종(gothic, y2k, brutalist 포함)이라고 쓴다. 컴포넌트 수는 MarkTechPost가 문서 사이트 기준 160개 이상이라고 덧붙인다. 레포 주소는 HN 글이 facebook/astryx, 지금은 meta/astryx다. 조회 시점 GitHub 스타 14,488개, MIT, 베타, React 19 이상이다. GeekNews에도 이미 Astryx 항목이 있다. 슬롭 방지 글 자체는 이번 조사에서 GeekNews, HN, 경제지 어디에서도 따로 다룬 글을 찾지 못했다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=31190" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Astryx - Meta가 공개한 오픈소스 디자인 시스템</b><span>검색 결과 요약 기준. Meta 내부에서 8년간 자라 가장 많이 쓰이고 규모가 큰 디자인 시스템이며 13,000개 이상의 앱을 구동한다고 정리. 포인트·댓글 수는 확인하지 못함.</span></a><small class="rdate"></small></li><li><span class="t">R02</span><a class="rlink" href="https://news.ycombinator.com/item?id=48665555" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Astryx – open-source design system customizable and agent ready</b><span>12포인트·댓글 2개. &#x27;matcha 테마가 좋다&#x27;와 &#x27;Meta를 지금은 믿기 어렵다&#x27;가 전부. 같은 주제의 다른 제출 5건(facebook/astryx 레포 링크 포함)은 각각 1~3포인트.</span></a><small class="rdate">2026-06-24</small></li><li><span class="t">R03</span><a class="rlink" href="https://github.com/meta/astryx" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>GitHub - meta/astryx</b><span>GitHub API 직접 조회: 스타 14,488개, MIT, 생성 2026-01-09. Open internals(swizzle), No styling lock-in(StyleX는 소비자에게 안 보임), Customize without wrapping(테마=CSS 변수), Built for people and agents. 현재 베타, React 19 이상.</span></a><small class="rdate"></small></li><li><span class="t">R04</span><a class="rlink" href="https://astryx.atmeta.com/blog/how-astryx-works" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>How Astryx works (Astryx 공식 블로그)</b><span>원문. 컴포넌트 150개 이상, 사전 컴파일 CSS 한 장으로 빌드 설정 없이 사용 가능, 변경은 사람과 AI 양쪽에 시험해 데이터로 정한다고 설명. AI 보조 변경도 사람이 리뷰한다고 명시.</span></a><small class="rdate">2026-06-29</small></li><li><span class="t">R05</span><a class="rlink" href="https://gcn.com/open-source-design-toolkit-powering-around/20118" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>A design toolkit powering around 13,000 internal apps ... just went open source (GCN)</b><span>GCN. 공개일을 2026년 6월 28일로 기술. 테마 10종, CLI 명령의 JSON manifest, 내장 MCP 서버를 강조. 공식 자료와 테마 수가 다름.</span></a><small class="rdate">2026-06-28</small></li><li><span class="t">R06</span><a class="rlink" href="https://infoq.com/news/2026/09/meta-astryx-design-system" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Meta Open-Sources Astryx, its Agent-Ready React Design System (InfoQ)</b><span>InfoQ. React 19와 StyleX 기반, 컴포넌트 150개 이상, 디자인 토큰, 엔지니어와 AI 에이전트용 CLI와 MCP 도구. 정확한 게시일은 확인하지 못함(URL 경로 2026/09).</span></a><small class="rdate"></small></li><li><span class="t">R07</span><a class="rlink" href="https://marktechpost.com/2026/07/21/meta-open-sources-astryx-an-agent-ready-react-design-system-with-150-accessible-components-seven-themes-and-a-cli/amp?noamp=mobile" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>Meta Open-Sources Astryx: ... 150+ Accessible Components, Seven Themes, and a CLI (MarkTechPost)</b><span>MarkTechPost. 테마 7종이라고 표기하고, 문서 사이트는 이제 컴포넌트 160개 이상을 나열한다고 덧붙임. 시스템은 동작·접근성·품질을, 테마는 외형을 맡는 분리 구조.</span></a><small class="rdate">2026-07-21</small></li></ul><p class="research-note">ℹ️ 이번 호에서 찾지 못한 소스: 디자인 슬롭 방지 글(레퍼런스 5곳)은 GeekNews, HN, 경제지 모두 같은 글이 없다(없음). Astryx 경제지 기사도 없었다(검색에 나온 메타 관련 경제지 기사는 광고 실적, 신용등급, 뮤즈 에이전트 건이라 제외). GeekNews 본문은 직접 접근이 403으로 막혀 검색 결과 요약 기준이고 게시 날짜는 확인하지 못했다. GCN, InfoQ, MarkTechPost는 IT 전문 매체라 WEB으로 표시했다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">AI 디자인 슬롭 방지: 에이전트에게 줄 디자인 레퍼런스 5곳</div><div class="ref-hook">레퍼런스 5곳을 에이전트 입력으로 주자는 글. 알맹이는 댓글의 pinning 제안이다. MCP는 고르는 도구, 빌드 기준은 파일로 고정.</div><div class="ref-links"><a href="https://www.threads.com/@heytanzil/post/DfSGeHSlMoN" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-04%20AI%20%EB%94%94%EC%9E%90%EC%9D%B8%20%EC%8A%AC%EB%A1%AD%20%EB%B0%A9%EC%A7%80%20-%20%EC%97%90%EC%9D%B4%EC%A0%84%ED%8A%B8%EC%9A%A9%20%EB%94%94%EC%9E%90%EC%9D%B8%20%EB%A0%88%ED%8D%BC%EB%9F%B0%EC%8A%A4%205%EA%B3%B3%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">Meta Astryx: 8년간 내부에서 쓴 디자인 시스템 오픈소스 공개</div><div class="ref-hook">8년, 앱 13,000개 이상, 컴포넌트 150개 이상. swizzle로 컴포넌트 소스를 꺼내 소유하고, 테마는 CSS 변수 묶음이다. 베타, React 19 이상, MIT.</div><div class="ref-links"><a href="https://github.com/meta/astryx" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-08%20Meta%20Astryx%20%EB%94%94%EC%9E%90%EC%9D%B8%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-small-model-two-meanings" class="section">
+    <div class="grid section-head"><span class="section-index">03</span><h2 class="section-title">&#x27;작다&#x27;의 두 가지 뜻: 506MiB 음성 합성은 메모리 6GB, 38MB 음성 복원은 Ampere GPU</h2><p class="section-meta">KittenTTS 2는 1.7B 파라미터를 1비트로 줄여 가중치 506MiB로 CPU에서 돌리고, NVIDIA RE-USE는 960만 파라미터, 38.4MB인데 공식 실행 환경은 Linux와 Ampere GPU다. 둘 다 &#x27;작은 모델&#x27;로 소개됐지만 작다는 말이 가리키는 숫자가 다르다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">KittenTTS 2는 1.7B 파라미터를 1비트로 줄인 음성 언어 모델이다. 양자화 가중치는 506MiB이고 기본 음성 47개, 5~30초 샘플 음성 복제를 지원하며 CPU에서 실시간으로 돈다고 README는 적는다. 그런데 같은 README의 사전 요건은 &#x27;CUDA GPU 약 8GB 여유, 또는 RAM 약 6GB의 CPU&#x27;다. 파일은 506MiB여도 메모리는 그 열 배 이상 잡는 셈이다. 한국어는 Threads 글이 20개 언어에 포함된다고 썼고, 우리가 확인한 README 발췌에서는 언어 목록까지 확인하지 못했다. 글쓴이도 한국어 발음 품질은 직접 테스트하라고 단서를 달았다. 허깅페이스 기준 모델은 9월 30일에 만들어졌고 다운로드 75,745회, 좋아요 213개이며, GitHub 스타는 Threads 글 시점 16,412개에서 조회 시점 16,810개가 됐다. 이전 세대(0.8, 15M~80M 파라미터, 25MB부터)는 HN에서 3월 Show HN이 561포인트·댓글 181개, 2025년 8월 첫 Show HN이 1,003포인트·댓글 361개를 받았다. KittenTTS 2 자체를 다룬 HN과 GeekNews 글은 찾지 못했다. NVIDIA RE-USE는 960만 파라미터, FP32 기준 38.4MB, 30층 양방향 Mamba 모델이다. 허깅페이스 릴리스는 10월 22일이고 NVIDIA의 X 소개가 10월 30일, AI타임스 보도가 11월 2일이라 &#x27;이번 주 공개&#x27;로 읽히기 쉽다. URGENT 2025 전체 세트에서 PESQ 2.57(UniPASE 2.17), STOI 0.78(0.76), 화자 유사도 0.86(0.81), 문자 정확도 89.17(87.28)로 더 큰 모델보다 앞서지만, DNSMOS(3.29 대 Sidon 3.34)와 UTMOS(2.94 대 Sidon 3.21, UniPASE 2.96)는 뒤진다. 이 수치는 NVIDIA 자체 발표다. 학습 언어는 영어, 독일어, 스페인어, 프랑스어, 중국어이고 한국어는 없다(모델 카드는 언어에 종속되지 않는다고 설명). 공식 추론 환경은 Linux와 Ampere GPU이고 mamba-ssm이 필요해서, Oossa는 작은 크기만으로 개인용 기기에서 바로 실행된다고 보기는 어렵다고 지적했다. 파일 크기, 파라미터 수, 필요한 하드웨어는 서로 다른 숫자다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://news.hada.io/topic?id=27680" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>KittenTTS - 25MB 이하의 SOTA 음성 합성(TTS) 모델 (이전 세대 0.8)</b><span>KittenTTS 2가 아니라 0.8 시절 글. 15M~80M 파라미터, 25~80MB, CPU 전용. 댓글에서는 &#x27;기기 내 TTS는 접근성 도구로 훌륭하다&#x27;는 반응과 의존 체인이 CUDA 패키지 수 GB를 끌어온다는 불만이 나옴.</span></a><small class="rdate"></small></li><li><span class="t">R02</span><a class="rlink" href="https://news.ycombinator.com/item?id=47441546" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Show HN: Three new Kitten TTS models – smallest less than 25MB (이전 세대 0.8)</b><span>561포인트·댓글 181개(최상위 51개). &#x27;iPhone에서 돌릴 수 있나&#x27;, &#x27;영어 전용이냐&#x27;, &#x27;음성 대부분이 비즈니스에 쓰기엔 아쉽다&#x27;는 반응. KittenTTS 2 자체의 HN 글은 찾지 못함.</span></a><small class="rdate">2026-03-19</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.ycombinator.com/item?id=44807868" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Show HN: Kitten TTS – 25MB CPU-Only, Open-Source TTS Model (첫 공개)</b><span>1,003포인트·댓글 361개. 이 프로젝트가 처음 화제가 된 글. RE-USE를 다룬 HN 글은 찾지 못함.</span></a><small class="rdate">2025-08-06</small></li><li><span class="t">R04</span><a class="rlink" href="https://huggingface.co/KittenML/kitten-tts-2" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>KittenML/kitten-tts-2 (Hugging Face)</b><span>허깅페이스 API 직접 조회: 생성 2026-09-30, 다운로드 75,745, 좋아요 213. 1.7B 음성 언어 모델이 S3 코덱 토큰을 쓰고 보코더가 24kHz 오디오로 바꿈. CPU 최속 경로는 llama.cpp 포크(베타).</span></a><small class="rdate">2026-09-30</small></li><li><span class="t">R05</span><a class="rlink" href="https://github.com/KittenML/KittenTTS/blob/main/README.md" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>KittenML/KittenTTS README (GitHub)</b><span>GitHub API 직접 조회: 스타 16,810개, Apache-2.0. 506MiB 가중치, 47개 음성과 복제. 사전 요건은 CUDA GPU 약 8GB 또는 CPU RAM 약 6GB, 디스크 약 1GB(작은 가중치는 506MiB).</span></a><small class="rdate"></small></li><li><span class="t">R06</span><a class="rlink" href="https://www.aitimes.com/news/articleView.html?idxno=216899" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>엔비디아, 잡음·울림 제거하는 초경량 음성 복원 AI 공개…대형 모델 능가</b><span>AI타임스. 960만 파라미터, FP32 38.4MB, 8~48kHz 7종 샘플레이트, 영어·독일어·스페인어·프랑스어·중국어로 학습. 화자 분리 기능은 없고 공식 환경은 Linux와 Ampere GPU.</span></a><small class="rdate">2026-11-02</small></li><li><span class="t">R07</span><a class="rlink" href="https://huggingface.co/nvidia/NVIDIA-NemotronLabs-RE-USE" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>nvidia/NVIDIA-NemotronLabs-RE-USE (Hugging Face 모델 카드)</b><span>허깅페이스 API 직접 조회: 다운로드 35,085, 좋아요 209, 릴리스 2026-10-22, 라이선스 OpenMDW-1.1. URGENT 2025 전체 세트 표에서 PESQ·STOI·Spk·CAcc는 앞서고 DNSMOS·UTMOS는 Sidon보다 낮음. 모두 NVIDIA 자체 평가.</span></a><small class="rdate">2026-10-22</small></li><li><span class="t">R08</span><a class="rlink" href="https://oossa.com/ko/960" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>엔비디아, 960만 매개변수 음성 복원 모델 공개 (Oossa)</b><span>Oossa. 모든 지표에서 앞선 것은 아니며 독립 기관 검증 결과는 없다고 짚음. 공식 환경이 Linux와 Ampere GPU라서 작은 크기만으로 개인용 기기에서 바로 실행된다고 볼 수는 없다고 지적.</span></a><small class="rdate"></small></li></ul><p class="research-note">ℹ️ 이번 호에서 찾지 못한 소스: KittenTTS 2와 RE-USE는 GeekNews, HN 모두 해당 글이 없다(없음). GeekNews와 HN에 나온 KittenTTS는 이전 세대(0.8, 25MB급) 글이라 그렇게 표시했다. 경제지는 두 모델 모두 기사를 찾지 못했다(검색에 나온 경제지 음성 AI 기사는 Nemotron Transcribe와 구형 Fugatto 건이라 제외). AI타임스와 Oossa는 IT 전문 매체라 WEB으로 표시했다. GeekNews 본문은 직접 접근이 403으로 막혀 검색 결과 요약 기준이다.</p></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">GitHub 스타 1.6만 개 — GPU 없이 한국어 음성까지 생성하는 오픈소스 AI, KittenTTS 2</div><div class="ref-hook">1.7B 1비트, 양자화 가중치 506MiB, 5~30초 샘플로 음성 복제. 한국어 품질은 작성자도 직접 테스트하라고 했다.</div><div class="ref-links"><a href="https://github.com/KittenML/KittenTTS" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-24%20KittenTTS2-%EC%98%A4%ED%94%88%EC%86%8C%EC%8A%A4-%EC%9D%8C%EC%84%B1%EC%83%9D%EC%84%B1AI%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">NVIDIA NemotronLabs RE-USE: 960만 파라미터 음성 향상 모델</div><div class="ref-hook">960만 파라미터, 30층 양방향 Mamba. 잡음, 잔향, 클리핑, 코덱 손상을 한 모델로 다룬다. 겹친 발화는 주 화자만 남긴다.</div><div class="ref-links"><a href="https://huggingface.co/nvidia/NVIDIA-NemotronLabs-RE-USE" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-01%20NVIDIA%20NemotronLabs%20RE-USE%20%EC%9D%8C%EC%84%B1%20%ED%96%A5%EC%83%81%20%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+
+  <footer class="foot"><span>2026-11-08</span><span>Automatically generated · Threads Weekly (Sample Issue)</span></footer>
+</div>
+<script>
+(function () {
+  var KEY = 'threads-weekly-theme';
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-switch button');
+  function apply(mode) {
+    if (mode === 'light' || mode === 'dark') { root.setAttribute('data-theme', mode); }
+    else { root.removeAttribute('data-theme'); mode = 'system'; }
+    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.themeChoice === mode); });
+  }
+  var saved = localStorage.getItem(KEY) || 'system';
+  apply(saved);
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.dataset.themeChoice;
+      localStorage.setItem(KEY, mode);
+      apply(mode);
+    });
+  });
+})();
+</script>
+</body>
+</html>
