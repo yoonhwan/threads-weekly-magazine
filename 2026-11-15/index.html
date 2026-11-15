@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="color-scheme" content="light dark">
+  <title>스레드 위클리</title>
+  <style>
+    :root {
+      --red: #e30613;
+      --ink: #111;
+      --paper: #fff;
+      --soft: #f2f2f2;
+      --muted: #686868;
+      --line: #c8c8c8;
+      --font: "Helvetica Neue", "Akzidenz-Grotesk", Inter, Arial, "Apple SD Gothic Neo", sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    }
+    :root[data-theme="light"] { --ink:#111; --paper:#fff; --soft:#f2f2f2; --muted:#686868; --line:#c8c8c8; }
+    :root[data-theme="dark"] { --ink:#fff; --paper:#080808; --soft:#171717; --muted:#aaa; --line:#3b3b3b; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+    body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--font); font-size:16px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+    a { color:inherit; }
+    button { font:inherit; }
+    h1,h2,h3,p,figure,blockquote,ol,ul { margin:0; }
+    ol,ul { padding:0; }
+    .page { width:min(100% - 40px, 1280px); margin:0 auto; padding:28px 0 64px; }
+    .grid { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; }
+    .kicker { color:var(--red); font-size:.72rem; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+    .rule { border-top:1px solid var(--ink); }
+
+    .mast { border-top:8px solid var(--red); padding-top:18px; }
+    .brand { grid-column:1 / span 5; font-size:clamp(1.1rem,2vw,1.65rem); font-weight:900; letter-spacing:-.04em; line-height:1; }
+    .issue { grid-column:9 / -1; text-align:right; font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .hero { margin-top:72px; align-items:end; }
+    .hero-date { grid-column:1 / span 8; font-size:clamp(2.4rem,7vw,6.4rem); font-weight:900; letter-spacing:-.06em; line-height:.9; word-break:keep-all; }
+    .hero-note { grid-column:10 / -1; padding-top:12px; border-top:1px solid var(--ink); font-size:.82rem; font-weight:700; }
+    .hero-note span { display:block; margin-top:8px; color:var(--muted); font-weight:500; }
+
+    .metrics { margin-top:64px; border-top:1px solid var(--ink); border-bottom:1px solid var(--ink); }
+    .metric { grid-column:span 3; min-height:145px; padding:16px 12px 18px 0; border-right:1px solid var(--line); display:flex; flex-direction:column; justify-content:space-between; }
+    .metric:last-child { border-right:0; }
+    .metric strong { font-size:clamp(2.2rem,4.6vw,4.6rem); font-weight:900; letter-spacing:-.06em; line-height:.9; font-variant-numeric:tabular-nums; }
+    .metric span { max-width:10rem; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .metric em { color:var(--red); font-style:normal; }
+
+    .jump { margin-top:18px; display:flex; flex-wrap:wrap; gap:6px 20px; }
+    .jump a { text-decoration:none; font-size:.72rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .jump a::before { content:"↘ "; color:var(--red); }
+
+    .theme-switch { margin-top:16px; display:flex; gap:6px; }
+    .theme-switch button { border:1px solid var(--line); background:transparent; color:var(--muted); padding:5px 11px; font-size:.68rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; cursor:pointer; }
+    .theme-switch button.on { border-color:var(--red); color:var(--red); }
+
+    .section { margin-top:120px; }
+    .section-head { align-items:end; padding-bottom:14px; border-bottom:3px solid var(--ink); }
+    .section-index { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; }
+    .section-title { grid-column:2 / span 7; font-size:clamp(1.6rem,3vw,3.1rem); font-weight:900; letter-spacing:-.05em; line-height:1.05; }
+    .section-meta { grid-column:10 / -1; text-align:right; color:var(--muted); font-size:.76rem; font-weight:700; line-height:1.4; }
+
+    /* v2: 멤버 기사는 짧은 레퍼런스 줄(후크 한 줄 + 링크)로만 표시 — 본문 덤프 없음 */
+    .refs { margin-top:10px; }
+    .refs-head { font-size:.68rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); padding-bottom:8px; border-bottom:1px solid var(--line); }
+    .ref-row { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:baseline; padding:10px 0; border-bottom:1px solid var(--line); font-size:.85rem; }
+    .ref-row:last-child { border-bottom:0; }
+    .ref-row .no { grid-column:1; color:var(--red); font-size:.8rem; font-weight:900; font-variant-numeric:tabular-nums; }
+    .ref-row .ref-body { grid-column:2 / span 9; min-width:0; }
+    .ref-row .ref-title { font-weight:700; letter-spacing:-.01em; }
+    .ref-row .ref-hook { color:var(--muted); margin-top:2px; }
+    .ref-row .ref-links { margin-top:4px; font-size:.76rem; font-weight:700; }
+    .ref-row .ref-links a { color:var(--red); text-decoration:none; border-bottom:1px solid var(--red); margin-right:14px; }
+
+    .research { margin-top:26px; padding:24px 0 10px; background:var(--soft); }
+    .research-inner { padding:24px 28px; }
+    .research-head { font-size:.82rem; font-weight:900; letter-spacing:.04em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+    .research-head .dot { color:var(--red); }
+    .research-narrative { font-size:1.02rem; line-height:1.85; color:var(--ink); max-width:72ch; margin-bottom:22px; padding-bottom:20px; border-bottom:1px solid var(--line); }
+    .links { list-style:none; }
+    .links li { display:grid; grid-template-columns:repeat(12,minmax(0,1fr)); column-gap:24px; align-items:start; padding:13px 0; border-bottom:1px solid var(--line); }
+    .links li:last-child { border-bottom: 0; }
+    .links li > .t { grid-column:1 / span 2; color:var(--red); font-size:.68rem; font-weight:900; letter-spacing:.04em; }
+    .links a.rlink { grid-column:3 / span 7; min-width:0; display:flex; flex-direction:column; text-decoration:none; }
+    .links a.rlink b { font-size:.92rem; line-height:1.35; }
+    .links a.rlink span { margin-top:3px; color:var(--muted); font-size:.78rem; line-height:1.5; }
+    .links li > small.rdate { grid-column:11 / -1; color:var(--muted); font-size:.72rem; text-align:right; }
+    .research-empty { padding:16px 0; color:var(--muted); font-size:.85rem; }
+    .research-note { margin-top:16px; padding:12px 14px; background:#fff; border-left:3px solid var(--red); color:var(--muted); font-size:.78rem; line-height:1.6; }
+    .links a.rlink .src-tag { order:-1; align-self:flex-start; margin-bottom:5px; display:inline-block; font-size:.62rem; font-weight:900; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border:1px solid currentColor; }
+    .links a.rlink .src-tag-web { color:var(--muted); }
+    .links a.rlink .src-tag-newshada { color:var(--red); border-color:var(--red); }
+    .links a.rlink .src-tag-hackernews { color:#ff6600; border-color:#ff6600; }
+    .links a.rlink .src-tag-korean_economic_news { color:#0a5c36; border-color:#0a5c36; }
+
+    .foot { margin-top:70px; padding-top:12px; border-top:1px solid var(--ink); display:flex; justify-content:space-between; gap:20px; color:var(--muted); font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+
+    @media (max-width: 760px) {
+      .page { width:min(100% - 28px, 680px); padding-top:18px; }
+      .grid { column-gap:10px; }
+      .brand { grid-column:1 / span 7; }
+      .issue { grid-column:9 / -1; }
+      .hero { margin-top:50px; }
+      .hero-date { grid-column:1 / -1; font-size:clamp(2.6rem,13vw,4.4rem); line-height:.95; }
+      .hero-note { grid-column:7 / -1; margin-top:34px; }
+      .metrics { margin-top:42px; }
+      .metric { grid-column:span 6; min-height:112px; padding:13px 8px 13px 0; border-bottom:1px solid var(--line); }
+      .metric:nth-child(even) { border-right:0; padding-left:10px; }
+      .metric strong { font-size:2.3rem; }
+      .jump { gap:8px 14px; }
+      .section { margin-top:78px; }
+      .section-index { grid-column:1 / span 2; }
+      .section-title { grid-column:3 / -1; font-size:1.9rem; }
+      .section-meta { grid-column:3 / -1; margin-top:14px; justify-self:start; text-align:left; }
+      .ref-row { grid-template-columns:28px 1fr; gap:4px 12px; }
+      .ref-row .no,.ref-row .ref-body { grid-column:auto; }
+      .links li { grid-template-columns:72px 1fr; gap:8px 12px; }
+      .links li > .t,.links a.rlink,.links li > small.rdate { grid-column:auto; }
+      .links a.rlink { grid-column:2; }
+      .links li > small.rdate { grid-column:2; text-align:left; }
+      .research-narrative { max-width:none; }
+      .research-inner { padding:18px 14px; }
+      .foot { flex-direction:column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html{scroll-behavior:auto} }
+  </style>
+</head>
+<body>
+<div class="page">
+  <header class="mast">
+    <div class="grid"><div class="brand">스레드<br>위클리</div><div class="issue">Scrap &amp; Research Digest<br>Threads Weekly</div></div>
+    <div class="grid hero"><h1 class="hero-date">2026.11.15</h1><p class="hero-note">Sample Issue v2<span>큐레이션·에디토리얼 리서치</span></p></div>
+  </header>
+
+  <section class="grid metrics" aria-label="이번 호 통계">
+    <div class="metric"><strong>3</strong><span>다룬 토픽 수</span></div>
+    <div class="metric"><strong>16</strong><span>리서치 소스 수</span></div>
+    <div class="metric"><strong>58</strong><span>기간<em>(일)</em></span></div>
+    <div class="metric"><strong>8</strong><span>참고 원문<em>(각주)</em></span></div>
+  </section>
+  <nav class="jump" aria-label="바로가기"><a href="#topic-agent-ui-abstraction">에이전트가 화면을 만들 때</a><a href="#topic-decision-model-as-a-part">판정은 작은 모델에게, 문</a><a href="#topic-why-and-the-line">&#x27;왜&#x27;를 설명하는 일과 선</a></nav>
+  <div class="theme-switch" role="group" aria-label="테마 선택">
+    <button type="button" data-theme-choice="system">시스템</button>
+    <button type="button" data-theme-choice="light">라이트</button>
+    <button type="button" data-theme-choice="dark">다크</button>
+  </div>
+
+  <section id="topic-agent-ui-abstraction" class="section">
+    <div class="grid section-head"><span class="section-index">01</span><h2 class="section-title">에이전트가 화면을 만들 때, 추상화는 어디에 두나</h2><p class="section-meta">Vercel과 shadcn은 UI SDK에서 클릭·포커스·ARIA만 떼어내고 마크업과 스타일은 각자 가져가라고 했다. Giting의 앱 UI 메뉴판은 반대로 부품에 &#x27;이름&#x27;을 붙여 에이전트가 엉뚱한 부품을 집지 않게 한다. 두 답 모두 스타일을 포기하고 반복되는 판단만 넘긴다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">이번 주 UI SDK를 가장 정확하게 요약한 문서는 보도자료가 아니라 GitHub README다. 문장은 &#x27;A library of behaviors for agents to build the next generation of user interfaces&#x27;다. 컴포넌트가 아니라 동작을 판다. shadcn은 발표문에서 &#x27;에이전트가 인터페이스의 생산자이자 사용자가 되고 있다. 그러면 추상화는 어디에 있어야 하나&#x27;라고 물었고, 답은 스타일이 아니라 동작이었다. 그런데 Hacker News에서 이 글은 11월 12일 올라와 7포인트, 댓글 0개로 묻혔다. 같은 라이브러리에 대한 HN의 최대 관심은 2월의 &#x27;shadcn 라디오 버튼은 왜 이렇게 복잡한가&#x27;였고, 그 글은 528포인트에 댓글 333개를 받았다. 동작을 더 주는 쪽으로 가는 동안 사용자들은 동작이 너무 많다고 말한 셈이다. GeekNews가 짚은 Vercel의 json-render는 반대 방향의 답이다. 자유 생성 대신 컴포넌트 카탈로그 안에서만 JSON을 만들게 한다. 한국 현장은 이미 다음 칸에 있다. 비씨카드는 전 직원에게 AI 에이전트를 주고, 개발자가 아닌 직원이 필요한 업무 프로그램을 직접 만들게 했다. 화면을 만드는 주체가 사람에서 에이전트로 옮겨가는 동안, 남은 쟁점은 &#x27;무엇을 미리 정해둘 것인가&#x27;다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://ui-sdk.dev/" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>UI SDK: A library for agents to build the next generation of UIs</b><span>2026-11-12 HN 제출. 7포인트, 댓글 0개. 같은 주 Threads 게시물은 조회 1.2K를 기록했다. 주목도가 매체별로 180도 갈린 사례.</span></a><small class="rdate">2026-11-12</small></li><li><span class="t">R02</span><a class="rlink" href="https://paulmakeswebsites.com/writing/shadcn-radio-button/" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>The Overcomplexity of the Shadcn Radio Button</b><span>528포인트, 댓글 333개. 라디오 버튼 하나에 접근성 로직이 얼마나 들어가는지를 두고 HN이 크게 갈렸다. 동작을 떼어내자는 제안의 반대편 목소리.</span></a><small class="rdate">2026-01-20</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.hada.io/topic?id=27933" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Vercel의 json-render - Generative UI 프레임워크</b><span>프롬프트에서 JSON을 만들되 사전 정의된 컴포넌트 카탈로그 밖으로 나가지 못하게 한다. 생성형 UI에서 자유도 대신 예측 가능성을 고른 설계.</span></a><small class="rdate">2026-07경</small></li><li><span class="t">R04</span><a class="rlink" href="https://magazine.hankyung.com/business/article/202611044479b" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>비씨카드, 전 직원에 AI 에이전트 제공... 일반 직원이 업무 프로그램 직접 개발</b><span>자체 AI 서비스 MoAI MATE로 문서 작성과 데이터 분석을 넘어 프로그램 개발까지 지원. 비개발 직원이 필요한 도구를 직접 만드는 단계.</span></a><small class="rdate">2026-11-04</small></li><li><span class="t">R05</span><a class="rlink" href="https://github.com/vercel-labs/ui" target="_blank" rel="noopener"><span class="src-tag src-tag-web">WEB</span><b>vercel-labs/ui — UI SDK 저장소</b><span>설치 명령은 @ui-sdk/react + @ui-sdk/core. 코딩 에이전트에 규약을 장착하는 npx skills add vercel-labs/ui --skill ui-sdk도 함께 제공한다.</span></a><small class="rdate">2026-11</small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (2)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">Vercel × shadcn &quot;UI SDK&quot; — AI 에이전트가 화면을 직접 만드는 시대</div><div class="ref-hook">키보드 내비게이션, 포커스, 선택, 닫기, 팝업, 드래그, 그리고 그 동작이 필요로 하는 ARIA만 @ui-sdk/core가 가진다. React 19 이상, Public Beta.</div><div class="ref-links"><a href="https://www.threads.com/@choi.openai/post/DfrUCITiROV" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-13%20Vercel%20shadcn%20UI%20SDK%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">앱 UI 메뉴판 (app-menu) — Giting 스킬</div><div class="ref-hook">&#x27;아래에서 올라오는 그거&#x27;를 바텀시트라고 부르는 순간 손잡이와 높이 단계까지 따라온다. 8코스 72항목, 네이티브 매핑 38개.</div><div class="ref-links"><a href="https://giting.kr/skills/app-menu" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-23%20%EC%95%B1%20UI%20%EB%A9%94%EB%89%B4%ED%8C%90%20app-menu%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-decision-model-as-a-part" class="section">
+    <div class="grid section-head"><span class="section-index">02</span><h2 class="section-title">판정은 작은 모델에게, 문장은 큰 모델에게</h2><p class="section-meta">Ryze AI는 SEO 판단 7가지를 Jev로 떼어냈다. 같은 달 nari-decision-4b v2는 그 역할을 Apache-2.0 한국어 모델로 33ms에 해낸다. Vela 2.0은 글을 쓰지 않고 라우팅·개인정보·비근거 구간만 짚어낸다. &#x27;결정 모델&#x27;은 이제 제품 이름이 아니라 파이프라인 부품의 이름이다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">9월 15일 HN에 올라온 Jev 소개 글은 1,989포인트에 댓글 520개를 받았다. 두 달 뒤 이 시장은 이미 여러 갈래로 갈라졌다. Jev 호환 API를 흉내 낸 오픈 모델이 줄을 섰고(Jeff, Kev, OneJev, nari, Jeeves), 추론 인프라가 따로 생겼고(Flide), 빅테크가 같은 형식을 냈다(Microsoft-Decision-1). 실측은 이 열기를 식힌다. Jev를 1만 6천 번 호출한 평가에서 문서 라우팅 호출은 50~67% 줄었지만, 이메일에서는 실제 요청을 확신 있게 제외하는 오류가 났다. 짧고 명확한 분류에는 강하고, 문서 전체나 업무 규칙 해석에는 약하다. 결론은 &#x27;작은 모델에게 다 맡기지 말고 확률의 양 끝만 믿어라&#x27;다. 0.9 이상 구간은 그대로 처리하고, 가운데 구간은 큰 모델이나 사람에게 넘긴다. 벤치마크 경쟁도 이미 붙었다. Microsoft-Decision-1은 36개 벤치마크 14만 7천 문항에서 83.5%, 중앙값 85ms를 기록해 Jev 1.13.0의 82.3%, 240ms를 앞섰다. 정확도 1.2%포인트 차이를 위해 지연을 3분의 1로 줄인 셈이다. 국내에서는 nari-decision-4b v2가 같은 역할을 Apache-2.0으로, A100 한 장에서 33ms에 한다고 밝혔다. 통신사와 반도체 회사는 더 위층에서 같은 문제를 푼다. KT는 질문마다 최적 모델을 골라 AI 운영비를 최대 20% 낮추겠다고 했고, 노타는 추론 전용 반도체에 모델을 얹는 최적화 계약을 이어갔다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://typesafe.ai/blog/introducing-system-one-models-and-jev" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Introducing System One Models and Jev</b><span>1,989포인트, 댓글 520개. 문자열을 생성하지 않고 선택지별 보정 확률을 반환하는 모델을 &#x27;System One&#x27;으로 정의한 원 발표.</span></a><small class="rdate">2026-09-15</small></li><li><span class="t">R02</span><a class="rlink" href="https://github.com/firelex/jeff" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Jeff – Jev-compatible 0.8B decision models, trained at home, ~30 ms</b><span>576포인트, 댓글 231개. 집에서 학습한 0.8B Jev 호환 모델. 인터페이스가 공개되자 2주 만에 재현 모델이 나왔다는 증거.</span></a><small class="rdate">2026-09-28</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.hada.io/topic?id=33974" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Jev를 공개 데이터와 실제 업무에 시험하다: 분류기인가, 필터인가?</b><span>약 1만 6천 회 호출 실측. 문서 라우팅 호출 50~67% 절감, 이메일에서는 실제 요청을 확신 있게 제외하는 오류. 확률 양 끝만 신뢰하라는 결론.</span></a><small class="rdate">2026-10 말</small></li><li><span class="t">R04</span><a class="rlink" href="https://news.hada.io/topic?id=35100" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>Microsoft-Decision-1 - 선택지별 확률을 반환하는 저비용 의사결정 모델</b><span>36개 벤치마크 147,137문항에서 평균 83.5%, 중앙값 85ms. Jev 1.13.0은 82.3%, 240ms. 입력 100만 토큰당 0.042달러.</span></a><small class="rdate">2026-10 말</small></li><li><span class="t">R05</span><a class="rlink" href="https://hankyung.com/article/202610078380i" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>KT 모두의 AI 12월 출격…AI 운영비 최대 20% 낮춘다</b><span>토큰 팩토리로 질문별 최적 국산 AI 모델을 고르는 구조. 라우팅을 비용 절감 수단으로 쓰는 통신사 사례.</span></a><small class="rdate">2026-10-07</small></li><li><span class="t">R06</span><a class="rlink" href="https://magazine.hankyung.com/job-joy/amp/202611122663d" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>노타, 하이퍼엑셀과 데이터센터용 AI 반도체 최적화 후속 계약</b><span>LLM 추론 전용 반도체 베르다 LPU에 모델별 양자화를 적용해 메모리 사용량을 줄이는 계약. 추론 효율 경쟁의 하드웨어 쪽.</span></a><small class="rdate">2026-11-12</small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (3)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">Jev로 대체한 SEO·GEO 워크플로 7가지 (@iiirrrrrraaaa)</div><div class="ref-hook">코드가 데이터를 모으고 Jev가 행마다 판정하고 임계값이 자동 적용·승인 대기·폐기를 나눈다. 글쓰기는 Jev가 하지 않는다. 판정 1건 약 0.0004달러.</div><div class="ref-links"><a href="https://www.threads.com/@iiirrrrrraaaa/post/DfpjTiLjMqn" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-13%20Jev%20SEO%20GEO%20%EC%9B%8C%ED%81%AC%ED%94%8C%EB%A1%9C%207%EA%B0%80%EC%A7%80%20%28iiirrrrrraaaa%29%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">nari-decision-4b v2 공개 (blackmallangcow)</div><div class="ref-hook">자체 평가셋 519문항에서 80.2%로 JEV-9B 73.4%를 앞섰다. A100 한 장 배치 1에서 요청당 33ms, 보정 오차 0.034, Apache-2.0.</div><div class="ref-links"><a href="https://www.threads.com/@blackmallangcow.c/post/DehM2cPCUK1" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-16%20nari-decision-4b%20v2%20%EA%B3%B5%EA%B0%9C%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">03</span><div class="ref-body"><div class="ref-title">Vela 2.0 — Open Foundation Routing Models (vLLM Semantic Router)</div><div class="ref-hook">텍스트를 생성하지 않고 라우팅·탈옥·PII 17종·비근거 구간을 문자 단위 span으로 짚는다. 0.3B부터 9B까지 네 가지.</div><div class="ref-links"><a href="https://huggingface.co/collections/vllm-sr/vela-20" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-08%20Vela%202.0%20%EC%98%A4%ED%94%88%20%EB%9D%BC%EC%9A%B0%ED%8C%85%20%EB%AA%A8%EB%8D%B8%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+<section id="topic-why-and-the-line" class="section">
+    <div class="grid section-head"><span class="section-index">03</span><h2 class="section-title">&#x27;왜&#x27;를 설명하는 일과 선을 긋는 일</h2><p class="section-meta">머스크는 학년과 교과서 순서를 지우고 &#x27;왜 배우는가&#x27; 하나만 남겼다. 같은 기간 Threads의 두 육아 글은 반대편에서 같은 말을 한다. 이유를 진심으로 설명하면 아이가 편지를 써 오고, 선을 흐리면 6~7세에 이미 부모를 만만하게 본다.</p></div>
+    <div class="research"><div class="research-inner"><div class="research-head"><span class="dot">🔎</span> 최신 리서치 — 지금 세계는</div><p class="research-narrative">애드 아스트라 소식은 Hacker News에서 한 번도 뜨겁지 않았다. 2015년 관련 영상 2포인트, 2017년 소개 글 1포인트, 2022년 분사 소식 2포인트가 전부다. 같은 소재가 Threads에서는 좋아요 65와 7개 댓글 스레드로 이어졌다. 교육 담론의 무게중심이 영어권 개발자 커뮤니티가 아니라 학부모 대화방에 있다는 뜻이다. 그사이 각국 정부는 &#x27;왜&#x27;를 묻는 대신 규칙을 정했다. 노르웨이는 6~13세의 생성형 AI 사용을 사실상 금지하고, 14~16세는 교사 감독 아래 조심스럽게 허용하고, 17~19세는 AI 활용법을 배우게 했다. 2024년 스마트폰 금지와 교실 규율 강화에 이은 흐름이다. 덴마크는 더 실무적이다. 집에서 작성한 과제에 구두 소명을 의무화하고, 2년제 HF 과정 약 9,000명의 주요 과제를 대상으로 즉시 시행했다. 두 나라의 공통 전제는 같다. 시험지와 결과물은 AI가 대신할 수 있으니, 남는 것은 설명하는 능력이다. 애드 아스트라가 2014년에 &#x27;왜 배우는가&#x27;를 물었을 때와 정확히 같은 지점으로 돌아왔다. 한국은 아직 다른 문을 두드린다. 교육부는 초3~4·중1·고1을 독서교육 집중 학년으로 지정하고, AI 기반 독서 플랫폼을 붙이겠다고 했다. 도구를 먼저 붙이고 목적을 나중에 묻는 순서다.</p><ul class="links"><li><span class="t">R01</span><a class="rlink" href="https://www.youtube.com/watch?v=3UxL-0--oQo" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Elon Musk Talks about Tesla, SpaceX and the Ad Astra School</b><span>2015년 HN 제출, 2포인트. 애드 아스트라에 대한 HN의 관심은 이 수준이었다.</span></a><small class="rdate">2015-07-24</small></li><li><span class="t">R02</span><a class="rlink" href="https://www.synthesis.com/" target="_blank" rel="noopener"><span class="src-tag src-tag-hackernews">HACKER NEWS</span><b>Synthesis ─ a spin-off from the custom school built for Elon Musk&#x27;s kids</b><span>2022년 HN 제출, 2포인트. 애드 아스트라가 분사한 Synthesis가 별도 서비스로 나온 시점.</span></a><small class="rdate">2022-04-27</small></li><li><span class="t">R03</span><a class="rlink" href="https://news.hada.io/topic?id=30655" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>노르웨이, 초등학교 AI 사용 사실상 금지</b><span>1~7학년(6~13세) 원칙적 금지, 14~16세 교사 감독 하 허용, 17~19세는 AI 활용법을 배운다. 2024년 스마트폰 금지에 이은 조치.</span></a><small class="rdate">2026-09경</small></li><li><span class="t">R04</span><a class="rlink" href="https://news.hada.io/topic?id=32277" target="_blank" rel="noopener"><span class="src-tag src-tag-newshada">GEEKNEWS</span><b>덴마크, AI 부정행위 막기 위해 서면 과제 구두 소명 의무화</b><span>집에서 작성한 과제에 구두 소명을 의무화하고 즉시 시행. 2년제 HF 과정 약 9,000명이 대상. 결과물 대신 설명을 검증하는 방식.</span></a><small class="rdate">2026-10 말</small></li><li><span class="t">R05</span><a class="rlink" href="https://hankyung.com/article/202607021418i" target="_blank" rel="noopener"><span class="src-tag src-tag-korean_economic_news">경제</span><b>교육부, 초3·중1·고1 독서교육 집중 학년 지정한다</b><span>2027년부터 세 학년을 독서교육 집중 학년으로 지정하고 교과 연계 독서를 확대. AI 기반 독서 플랫폼도 함께 구축한다.</span></a><small class="rdate">2026-07-02</small></li></ul></div></div>
+    <div class="refs"><div class="refs-head">참고 원문 (3)</div><div class="ref-row"><span class="no">01</span><div class="ref-body"><div class="ref-title">애드 아스트라 — 머스크가 학교에서 가장 먼저 없앤 것</div><div class="ref-hook">학년과 교과서 목차 순서를 지우고 &#x27;이걸 왜 배우는가&#x27;에 답하는 수업만 남겼다. 교장은 조시 단, 대표 수업은 정답 없는 문제다.</div><div class="ref-links"><a href="https://www.threads.com/@plain.flow/post/Dfj3lh0GZeD" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-11-11%20%EC%95%A0%EB%93%9C%20%EC%95%84%EC%8A%A4%ED%8A%B8%EB%9D%BC%20-%20%EB%A8%B8%EC%8A%A4%ED%81%AC%20%ED%95%99%EA%B5%90%EA%B0%80%20%EC%97%86%EC%95%A4%20%EA%B2%83%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">02</span><div class="ref-body"><div class="ref-title">늦장 부리는 아이를 혼낸 뒤 — &quot;진심은 꼬맹이에게도 통한다&quot;</div><div class="ref-hook">감정을 또 쏟으려다 멈추고 이유를 설명했더니, 아이가 &#x27;엄마 알려줘서 고마워요&#x27; 편지를 써 왔다.</div><div class="ref-links"><a href="https://www.threads.com/@coloring_word/post/De67G2lE-Di" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-26%20%EB%8A%A6%EC%9E%A5%20%EB%B6%80%EB%A6%AC%EB%8A%94%20%EC%95%84%EC%9D%B4%EB%A5%BC%20%ED%98%BC%EB%82%B8%20%EB%92%A4%20-%20%EC%A7%84%EC%8B%AC%EC%9D%80%20%ED%86%B5%ED%95%9C%EB%8B%A4%20%28%EB%94%B0%EC%88%9C%20%EB%B3%80%ED%98%B8%EC%82%AC%29%2FREADME.md">옵시디언 📓</a></div></div></div><div class="ref-row"><span class="no">03</span><div class="ref-body"><div class="ref-title">6-7세 자녀가 부모를 만만하게 볼 때 - 권위(서열) 세우는 훈육법 7가지</div><div class="ref-hook">경고는 딱 한 번, 실행은 반드시. 가짜 협상이 부모를 가장 우습게 만든다. 조회 203K.</div><div class="ref-links"><a href="https://www.threads.com/@hyejinim1115/post/DeE189Hj9qo" target="_blank" rel="noopener">원문 ↗</a><a href="obsidian://open?vault=jarvis-vault&amp;file=News-Links%2F2026-10-06%206-7%EC%84%B8%20%EC%9E%90%EB%85%80%20%ED%9B%88%EC%9C%A1%20%EB%B6%80%EB%AA%A8%20%EA%B6%8C%EC%9C%84%20%EC%84%B8%EC%9A%B0%EA%B8%B0%207%EA%B0%80%EC%A7%80%2FREADME.md">옵시디언 📓</a></div></div></div></div>
+  </section>
+
+  <footer class="foot"><span>2026-11-15</span><span>Automatically generated · Threads Weekly (Sample Issue)</span></footer>
+</div>
+<script>
+(function () {
+  var KEY = 'threads-weekly-theme';
+  var root = document.documentElement;
+  var buttons = document.querySelectorAll('.theme-switch button');
+  function apply(mode) {
+    if (mode === 'light' || mode === 'dark') { root.setAttribute('data-theme', mode); }
+    else { root.removeAttribute('data-theme'); mode = 'system'; }
+    buttons.forEach(function (b) { b.classList.toggle('on', b.dataset.themeChoice === mode); });
+  }
+  var saved = localStorage.getItem(KEY) || 'system';
+  apply(saved);
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var mode = b.dataset.themeChoice;
+      localStorage.setItem(KEY, mode);
+      apply(mode);
+    });
+  });
+})();
+</script>
+</body>
+</html>
